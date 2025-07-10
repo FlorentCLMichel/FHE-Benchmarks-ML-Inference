@@ -1,6 +1,5 @@
 
-#include "openfhe/pke/openfhe.h"  // use this for clang
-// #include "openfhe.h"  // use this for bazel from @openfhe
+#include "openfhe/pke/openfhe.h"
 
 using namespace lbcrypto;
 using CiphertextT = ConstCiphertext<DCRTPoly>;
