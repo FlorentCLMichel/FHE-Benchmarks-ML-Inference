@@ -24,7 +24,7 @@ void load_dataset(Dataset &dataset, const char *filename) {
     }
     dataset.push_back(sample);
   }
-  std::cout << "Dataset size: " << dataset.size() << std::endl;
+  std::cout << "Found " << dataset.size() << " samples" << std::endl;
 }
 
 template <int N>
@@ -39,8 +39,8 @@ int argmax(float *A) {
 }
 
 int main(int argc, char *argv[]) {
-  std::cout << "Done loading dataset" << std::endl;
   auto dataset = Dataset();
+  std::cout << "Loading dataset" << std::endl;
   load_dataset(dataset, "mnist_test.txt");
   std::cout << "Done loading dataset" << std::endl;
 
@@ -100,7 +100,10 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  std::cout << "accuracy: " << accurate << "/" << batch_size << std::endl;
-
+  if (batch_size > 1 ) {
+    std::cout << "accuracy: " << accurate << "/" << batch_size << std::endl;
+  } else {
+    std::cout << "Omitting accuracy for batch size less than 1" << std::endl;
+  }
   return 0;
 }
