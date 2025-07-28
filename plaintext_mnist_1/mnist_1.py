@@ -4,8 +4,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split
 import os
-from absl import app
-from absl import flags
+from absl import app, flags
 
 FLAGS = flags.FLAGS
 
@@ -14,7 +13,7 @@ BATCH_SIZE = 64
 LEARNING_RATE = 0.001
 EPOCHS = 15 # Increased epochs for potentially better accuracy
 MODEL_PATH = 'mnist_ffnn_model.pth'
-RANDOM_SEED = 42 # for reproducibility
+RNG_SEED = 42 # for reproducibility
 
 # Define command line flags
 flags.DEFINE_string('model_path', MODEL_PATH, 'Path to save/load the model')
@@ -23,16 +22,16 @@ flags.DEFINE_float('learning_rate', LEARNING_RATE, 'Learning rate for optimizer'
 flags.DEFINE_integer('epochs', EPOCHS, 'Number of training epochs')
 flags.DEFINE_string('data_dir', './data', 'Directory to store/load MNIST dataset')
 flags.DEFINE_boolean('no_cuda', False, 'Disable CUDA even if available')
-flags.DEFINE_integer('seed', RANDOM_SEED, 'Random seed for reproducibility')
+flags.DEFINE_integer('seed', RNG_SEED, 'Random seed for reproducibility')
 
 flags.DEFINE_boolean('export_test_data', False, 'Export test dataset to file and exit')
 flags.DEFINE_string('test_data_output', 'mnist_test.txt', 'Output file for exported test data')
 flags.DEFINE_integer('num_samples', -1, 'Number of samples to export (-1 for all samples)')
 
 # Ensure reproducibility
-torch.manual_seed(RANDOM_SEED)
+torch.manual_seed(RNG_SEED)
 if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(RANDOM_SEED)
+    torch.cuda.manual_seed_all(RNG_SEED)
 
 # 2. Data Loading and Preprocessing
 def get_mnist_transform():
@@ -85,7 +84,9 @@ def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_sample
         output_file (str): Output file path
         num_samples (int): Number of samples to export (-1 for all)
     """
-    transform = get_mnist_transform()
+    transform = transforms.Compose([
+        transforms.ToTensor(), # Converts PIL Image or numpy.ndarray to FloatTensor and scales to [0.0, 1.0]
+    ])
     
     test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transform)
     
