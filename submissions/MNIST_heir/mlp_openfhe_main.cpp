@@ -6,11 +6,12 @@
 
 #include "mlp_openfhe.h"
 
-#define DIM 1024
+#define MNIST_DIM 784
+#define NORMALIZED_DIM 1024
 
 struct Sample {
   int label;
-  float image[DIM];
+  float image[NORMALIZED_DIM];
 };
 
 using Dataset = std::vector<Sample>;
@@ -19,9 +20,16 @@ void load_dataset(Dataset &dataset, const char *filename) {
   std::ifstream file(filename);
   Sample sample;
   while (file >> sample.label) {
-    for (int i = 0; i < DIM; i++) {
+    // Read MNIST_DIM values from file
+    for (int i = 0; i < MNIST_DIM; i++) {
       file >> sample.image[i];
     }
+    
+    // Pad remaining values with 0.0 if NORMALIZED_DIM > MNIST_DIM
+    for (int i = MNIST_DIM; i < NORMALIZED_DIM; i++) {
+      sample.image[i] = 0.0f;
+    }
+
     dataset.push_back(sample);
   }
   std::cout << "Found " << dataset.size() << " samples" << std::endl;
@@ -39,15 +47,12 @@ int argmax(float *A) {
 }
 
 int main(int argc, char *argv[]) {
-  auto dataset = Dataset();
-  std::cout << "Loading dataset" << std::endl;
-  load_dataset(dataset, "mnist_test.txt");
-  std::cout << "Done loading dataset" << std::endl;
-
-  int accurate = 0;
-  int batch_size = 1;  // Default value
   
-  // Read total from command line argument if provided
+  // Default values
+  int batch_size = 1;
+  const char* test_data_path = "../../test_data.txt";
+  
+  // Read command line arguments
   if (argc > 1) {
     batch_size = std::atoi(argv[1]);
     if (batch_size <= 0) {
@@ -57,6 +62,19 @@ int main(int argc, char *argv[]) {
   } else {
     std::cout << "Batch size not provided, defaulting to 1" << std::endl;
   }
+  
+  if (argc > 2) {
+    test_data_path = argv[2];
+  } else {
+    std::cout << "Test data path not provided, defaulting to ../../test_data.txt" << std::endl;
+  }
+  
+  auto dataset = Dataset();
+  std::cout << "Loading dataset from: " << test_data_path << std::endl;
+  load_dataset(dataset, test_data_path);
+  std::cout << "Done loading dataset" << std::endl;
+
+  int accurate = 0;
   
   std::cout << "Processing " << batch_size << " samples" << std::endl;
 
@@ -72,7 +90,7 @@ int main(int argc, char *argv[]) {
     auto *input = dataset[i].image;
     std::cout << "Done extracting first image" << std::endl;
 
-    std::vector<float> input_vector(input, input + DIM);
+    std::vector<float> input_vector(input, input + NORMALIZED_DIM);
 
     auto input_encrypted =
         mlp__encrypt__arg0(cryptoContext, input_vector, publicKey);

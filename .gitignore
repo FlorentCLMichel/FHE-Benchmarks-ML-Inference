@@ -1,2 +1,6 @@
+# Temporary files for loading MNIST data and model training
 plaintext_mnist_1/data
 plaintext_mnist_1/mnist_ffnn_model.pth
+
+#  Python virtual environment
+bmenv
