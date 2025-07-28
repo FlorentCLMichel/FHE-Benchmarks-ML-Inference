@@ -4,37 +4,116 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split
 import os
+from absl import app, flags
+
+FLAGS = flags.FLAGS
 
 # 1. Configuration
 BATCH_SIZE = 64
 LEARNING_RATE = 0.001
 EPOCHS = 15 # Increased epochs for potentially better accuracy
 MODEL_PATH = 'mnist_ffnn_model.pth'
-RANDOM_SEED = 42 # for reproducibility
+RNG_SEED = 42 # for reproducibility
+
+# Define command line flags
+flags.DEFINE_string('model_path', MODEL_PATH, 'Path to save/load the model')
+flags.DEFINE_integer('batch_size', BATCH_SIZE, 'Batch size for training and evaluation')
+flags.DEFINE_float('learning_rate', LEARNING_RATE, 'Learning rate for optimizer')
+flags.DEFINE_integer('epochs', EPOCHS, 'Number of training epochs')
+flags.DEFINE_string('data_dir', './data', 'Directory to store/load MNIST dataset')
+flags.DEFINE_boolean('no_cuda', False, 'Disable CUDA even if available')
+flags.DEFINE_integer('seed', RNG_SEED, 'Random seed for reproducibility')
+
+flags.DEFINE_boolean('export_test_data', False, 'Export test dataset to file and exit')
+flags.DEFINE_string('test_data_output', 'mnist_test.txt', 'Output file for exported test data')
+flags.DEFINE_integer('num_samples', -1, 'Number of samples to export (-1 for all samples)')
 
 # Ensure reproducibility
-torch.manual_seed(RANDOM_SEED)
+torch.manual_seed(RNG_SEED)
 if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(RANDOM_SEED)
+    torch.cuda.manual_seed_all(RNG_SEED)
 
 # 2. Data Loading and Preprocessing
-transform = transforms.Compose([
-    transforms.ToTensor(), # Converts PIL Image or numpy.ndarray to FloatTensor and scales to [0.0, 1.0]
-    transforms.Normalize((0.1307,), (0.3081,)) # Normalize with MNIST dataset's mean and std
-])
+def get_mnist_transform():
+    """
+    Get the standard MNIST transform for preprocessing.
+    
+    Returns:
+        transforms.Compose: Transform pipeline for MNIST data
+    """
+    return transforms.Compose([
+        transforms.ToTensor(), # Converts PIL Image or numpy.ndarray to FloatTensor and scales to [0.0, 1.0]
+        transforms.Normalize((0.1307,), (0.3081,)) # Normalize with MNIST dataset's mean and std
+    ])
 
-# Download MNIST dataset
-full_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
-test_dataset = datasets.MNIST('./data', train=False, download=True, transform=transform)
+def load_and_preprocess_data(batch_size=BATCH_SIZE, data_dir='./data'):
+    """
+    Load and preprocess MNIST dataset.
+    
+    Args:
+        batch_size (int): Batch size for data loaders
+        data_dir (str): Directory to store/load dataset
+    
+    Returns:
+        tuple: (train_loader, val_loader, test_loader)
+    """
+    transform = get_mnist_transform()
 
-# Split training data into training and validation sets
-train_size = int(0.8 * len(full_dataset))
-val_size = len(full_dataset) - train_size
-train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+    # Download MNIST dataset
+    full_dataset = datasets.MNIST(data_dir, train=True, download=True, transform=transform)
+    test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transform)
 
-train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
-test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    # Split training data into training and validation sets
+    train_size = int(0.8 * len(full_dataset))
+    val_size = len(full_dataset) - train_size
+    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    
+    return train_loader, val_loader, test_loader
+
+# Function to export test data to file
+def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_samples=-1):
+    """
+    Export MNIST test dataset to a text file.
+    
+    Args:
+        data_dir (str): Directory to load dataset from
+        output_file (str): Output file path
+        num_samples (int): Number of samples to export (-1 for all)
+    """
+    transform = transforms.Compose([
+        transforms.ToTensor(), # Converts PIL Image or numpy.ndarray to FloatTensor and scales to [0.0, 1.0]
+    ])
+    
+    test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transform)
+    
+    # Determine how many samples to export
+    total_samples = len(test_dataset)
+    samples_to_export = total_samples if num_samples == -1 else min(num_samples, total_samples)
+    
+    print(f"Exporting {samples_to_export} out of {total_samples} test samples to {output_file}...")
+    
+    with open(output_file, 'w') as f:
+        for i, (image, label) in enumerate(test_dataset):
+            if i >= samples_to_export:
+                break
+                
+            # Flatten the image to 784 dimensions (28x28)
+            flattened_image = image.view(-1).numpy()
+            
+            # Write label first, then the 784 pixel values
+            f.write(f"{label}")
+            for pixel in flattened_image:
+                f.write(f" {pixel:.6f}")
+            f.write("\n")
+            
+            if (i + 1) % 1000 == 0:
+                print(f"Exported {i + 1} samples...")
+    
+    print(f"Successfully exported {samples_to_export} test samples to {output_file}")
 
 # 3. Model Definition
 class SimpleFFNN(nn.Module):
@@ -56,7 +135,7 @@ class SimpleFFNN(nn.Module):
         return x # No softmax here, as CrossEntropyLoss will apply it internally
 
 # 4. Training Function
-def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device):
+def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, model_path):
     best_accuracy = 0.0
     for epoch in range(epochs):
         model.train() # Set model to training mode
@@ -101,8 +180,8 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
         # Save the model if it's the best so far
         if val_accuracy > best_accuracy:
             best_accuracy = val_accuracy
-            torch.save(model.state_dict(), MODEL_PATH)
-            print(f'Model saved to {MODEL_PATH} with validation accuracy: {best_accuracy:.2f}%')
+            torch.save(model.state_dict(), model_path)
+            print(f'Model saved to {model_path} with validation accuracy: {best_accuracy:.2f}%')
 
 # 5. Testing Function
 def test_model(model, test_loader, device):
@@ -121,24 +200,59 @@ def test_model(model, test_loader, device):
     return accuracy
 
 # 6. Main Execution
-if __name__ == '__main__':
+def main(argv):
+    # Check if we should just export test data and exit
+    if FLAGS.export_test_data:
+        print("Export mode: Loading and exporting test data...")
+        export_test_data(data_dir=FLAGS.data_dir, output_file=FLAGS.test_data_output, num_samples=FLAGS.num_samples)
+        print("Export completed. Exiting.")
+        return
+    
+    # Use command line flags
+    model_path = FLAGS.model_path
+    batch_size = FLAGS.batch_size
+    learning_rate = FLAGS.learning_rate
+    epochs = FLAGS.epochs
+    data_dir = FLAGS.data_dir
+    use_cuda = not FLAGS.no_cuda and torch.cuda.is_available()
+    random_seed = FLAGS.seed
+    
+    # Set random seed for reproducibility
+    torch.manual_seed(random_seed)
+    if use_cuda:
+        torch.cuda.manual_seed_all(random_seed)
+    
+    # Load and preprocess data
+    print("Loading and preprocessing data...")
+    train_loader, val_loader, test_loader = load_and_preprocess_data(batch_size=batch_size, data_dir=data_dir)
+    print("Data loading completed.")
+    
     # Determine device (CPU or GPU)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if use_cuda else "cpu")
     print(f"Using device: {device}")
+    print(f"Model path: {model_path}")
+    print(f"Batch size: {batch_size}")
+    print(f"Learning rate: {learning_rate}")
+    print(f"Epochs: {epochs}")
+    print(f"Random seed: {random_seed}")
 
     model = SimpleFFNN().to(device)
     criterion = nn.CrossEntropyLoss() # Suitable for classification tasks
-    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE) # Adam optimizer
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate) # Adam optimizer
 
     # Train the model if it does not exist
-    if os.path.exists(MODEL_PATH):
-        print(f"\nModel '{MODEL_PATH}' already exists. Skipping training and loading saved model.")
-        model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+    if os.path.exists(model_path):
+        print(f"\nModel '{model_path}' already exists. Skipping training and loading saved model.")
+        model.load_state_dict(torch.load(model_path, map_location=device))
     else:
-        print(f"\nModel '{MODEL_PATH}' not found. Starting training...")
-        train_model(model, train_loader, val_loader, criterion, optimizer, EPOCHS, device)
+        print(f"\nModel '{model_path}' not found. Starting training...")
+        train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, model_path)
         print("Training finished.")
 
     # Testing the model
     print(f"\nEvaluating model on test data...")
     test_accuracy = test_model(model, test_loader, device)
+
+
+if __name__ == '__main__':
+    app.run(main)
