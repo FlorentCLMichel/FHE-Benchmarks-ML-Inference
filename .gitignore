@@ -1,6 +1,57 @@
 # Temporary files for loading MNIST data and model training
-plaintext_mnist_1/data
-plaintext_mnist_1/mnist_ffnn_model.pth
+harness/mnist/data
+harness/mnist/mnist_ffnn_model.pth
 
 #  Python virtual environment
 bmenv
+
+# Build artefacts
+*/build/
+io/
+third_party/
+measurements/
+harness/__pycache__/
+harness/mnist/__pycache__/
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Directories
+.DS_Store
+.idea/
+.vscode
+
+# Datasets, queries and results since we generate them on the fly
+datasets/*
+# But keep the folder alive with this one file, since some submissions might have fixed datasets
+!datasets/.gitkeep
