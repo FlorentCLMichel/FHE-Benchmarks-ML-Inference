@@ -51,10 +51,11 @@ public:
     fs::path seckeydir() const { return iodir() / "secret_key"; }
     fs::path ctxtupdir() const { return iodir() / "ciphertexts_upload"; }
     fs::path ctxtdowndir() const { return iodir() / "ciphertexts_download"; }
-    fs::path intermdir() const { return iodir() / "intermediate"; }
+    fs::path iointermdir() const { return iodir() / "intermediate"; }
     fs::path datadir() const { 
         return rootdir/"datasets"/instance_name(size);
     }
+    fs::path dataintermdir() const { return datadir() / "intermediate"; }
 };
 
 #endif  // ifndef PARAMS_H_
