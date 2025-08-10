@@ -75,7 +75,7 @@ def load_and_preprocess_data(batch_size=BATCH_SIZE, data_dir='./data'):
     return train_loader, val_loader, test_loader
 
 # Function to export test data to file
-def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_samples=-1):
+def generate_input(data_dir='./data', output_file='mnist_test.txt', num_samples=-1):
     """
     Export MNIST test dataset to a text file.
     
@@ -94,8 +94,6 @@ def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_sample
     total_samples = len(test_dataset)
     samples_to_export = total_samples if num_samples == -1 else min(num_samples, total_samples)
     
-    print(f"Exporting {samples_to_export} out of {total_samples} test samples to {output_file}...")
-    
     with open(output_file, 'w') as f:
         for i, (image, label) in enumerate(test_dataset):
             if i >= samples_to_export:
@@ -109,11 +107,7 @@ def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_sample
             for pixel in flattened_image:
                 f.write(f" {pixel:.6f}")
             f.write("\n")
-            
-            if (i + 1) % 1000 == 0:
-                print(f"Exported {i + 1} samples...")
     
-    print(f"Successfully exported {samples_to_export} test samples to {output_file}")
 
 # 3. Model Definition
 class SimpleFFNN(nn.Module):
