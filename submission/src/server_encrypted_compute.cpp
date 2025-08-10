@@ -34,7 +34,6 @@ int main(int argc, char* argv[]){
                                     SerType::BINARY)) {
         throw std::runtime_error("Failed to get public key from  " + prms.pubkeydir().string());
     }
-    std::cout << "Done loading cc and pk" << std::endl;
 
     std::ifstream emult_file(prms.pubkeydir()/"mk.bin", std::ios::in | std::ios::binary);
     if (!emult_file.is_open() ||
@@ -49,19 +48,19 @@ int main(int argc, char* argv[]){
       throw std::runtime_error(
         "Failed to get rotation keys from " + prms.pubkeydir().string());
     }
-    std::cout << "Done loading evalmult and rotation keys" << std::endl;
+    std::cout << "         [server] Loading keys" << std::endl;
 
     CiphertextT ctxt;
-    if (!Serial::DeserializeFromFile(prms.ctxtupdir()/"cipher_query.bin", ctxt, SerType::BINARY)) {
+    if (!Serial::DeserializeFromFile(prms.ctxtupdir()/"cipher_input.bin", ctxt, SerType::BINARY)) {
         throw std::runtime_error("Failed to get ciphertexts from " + prms.ctxtupdir().string());
     }
 
-    std::cout << "Run MNIST inference" << std::endl;
+    std::cout << "         [server] run encrypted MNIST inference" << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
     auto ctxtResult = mlp(cc, ctxt);
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-    std::cout << "Execution time: " << duration.count() << " seconds" << std::endl;
+    std::cout << "         [server] Execution time: " << duration.count() << " seconds" << std::endl;
 
     
     fs::create_directories(prms.ctxtdowndir());
