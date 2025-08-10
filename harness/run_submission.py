@@ -19,16 +19,15 @@ def main():
     
     # 0. Prepare running
     # Get the arguments
-    size, params, seed, num_runs, clrtxt = utils.parse_submission_arguments('Run the add-two-values FHE benchmark.')
+    size, params, seed, num_runs, clrtxt = utils.parse_submission_arguments('Run ML Inference FHE benchmark.')
     test = instance_name(size)
-    print(f"\n[harness] Running submission for {test} dataset")
+    print(f"\n[harness] Running submission for {test} inference")
 
     # Ensure the required directories exist
     utils.ensure_directories(params.rootdir)
 
     # Build the submission if not built already
-    # TODO(gshruthi): Uncomment the next line to enable building
-    # utils.build_submission(params.rootdir/"scripts")
+    utils.build_submission(params.rootdir/"scripts")
 
     # The harness scripts are in the 'harness' directory,
     # the executables are in the directory submission/build

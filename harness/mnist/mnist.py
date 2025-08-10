@@ -73,40 +73,6 @@ def load_and_preprocess_data(batch_size=BATCH_SIZE, data_dir='./data'):
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     
     return train_loader, val_loader, test_loader
-
-# Function to export test data to file
-def generate_input(data_dir='./data', output_file='mnist_test.txt', num_samples=-1):
-    """
-    Export MNIST test dataset to a text file.
-    
-    Args:
-        data_dir (str): Directory to load dataset from
-        output_file (str): Output file path
-        num_samples (int): Number of samples to export (-1 for all)
-    """
-    transform = transforms.Compose([
-        transforms.ToTensor(), # Converts PIL Image or numpy.ndarray to FloatTensor and scales to [0.0, 1.0]
-    ])
-    
-    test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transform)
-    
-    # Determine how many samples to export
-    total_samples = len(test_dataset)
-    samples_to_export = total_samples if num_samples == -1 else min(num_samples, total_samples)
-    
-    with open(output_file, 'w') as f:
-        for i, (image, label) in enumerate(test_dataset):
-            if i >= samples_to_export:
-                break
-                
-            # Flatten the image to 784 dimensions (28x28)
-            flattened_image = image.view(-1).numpy()
-            
-            # Write label first, then the 784 pixel values
-            f.write(f"{label}")
-            for pixel in flattened_image:
-                f.write(f" {pixel:.6f}")
-            f.write("\n")
     
 
 # 3. Model Definition
@@ -193,7 +159,40 @@ def test_model(model, test_loader, device):
     print(f'Accuracy on test data: {accuracy:.2f}%')
     return accuracy
 
-# 6. Main Execution
+# Function to export test data to file.
+def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_samples=-1):
+    """
+    Export MNIST test dataset to a text file.
+    
+    Args:
+        data_dir (str): Directory to load dataset from
+        output_file (str): Output file path
+        num_samples (int): Number of samples to export (-1 for all)
+    """
+    transform = transforms.Compose([
+        transforms.ToTensor(), # Converts PIL Image or numpy.ndarray to FloatTensor and scales to [0.0, 1.0]
+    ])
+    test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transform)
+    
+    # Determine how many samples to export
+    total_samples = len(test_dataset)
+    samples_to_export = total_samples if num_samples == -1 else min(num_samples, total_samples)
+    
+    with open(output_file, 'w') as f:
+        for i, (image, label) in enumerate(test_dataset):
+            if i >= samples_to_export:
+                break
+                
+            # Flatten the image to 784 dimensions (28x28)
+            flattened_image = image.view(-1).numpy()
+            
+            # Write label first, then the 784 pixel values
+            f.write(f"{label}")
+            for pixel in flattened_image:
+                f.write(f" {pixel:.6f}")
+            f.write("\n")
+
+
 def main(argv):
     # Check if we should just export test data and exit
     if FLAGS.export_test_data:

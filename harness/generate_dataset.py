@@ -16,7 +16,7 @@ def main():
     DATASET_PATH = params.datadir() / f"dataset.txt"
     DATASET_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-    mnist.generate_input(data_dir = params.datadir(), output_file=DATASET_PATH, num_samples=10000)
+    mnist.export_test_data(data_dir = params.datadir(), output_file=DATASET_PATH, num_samples=10000)
 
 if __name__ == "__main__":
     main()

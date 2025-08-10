@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-verify_result.py - correctness oracle for add-two-ints
+verify_result.py - correctness oracle for ML Inference workload.
 """
 
 import sys

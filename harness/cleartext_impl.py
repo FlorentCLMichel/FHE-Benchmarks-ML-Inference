@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-Cleartext reference for the “add” workload.
+Cleartext reference for the “ML Inference” workload.
 For each test case:
-    - Reads the dataset
-    - Computes the sum between the two 
+    - Reads the plain_input.bin file from the dataset intermediate directory
     - Writes the result to expected_XXX.txt for each test case (# datasets/expected.txt)
 """
-import random
+
 from pathlib import Path
 from utils import parse_submission_arguments
 
@@ -36,12 +35,14 @@ def get_first_char_as_int(file_path):
         return None
 
 def main():
-
     __, params, __, __, __ = parse_submission_arguments('Generate dataset for FHE benchmark.')
-    DATASET_Q_PATH = params.dataset_intermediate_dir() / f"plain_input.bin"
+    INPUT_PATH = params.dataset_intermediate_dir() / f"plain_input.bin"
     # Get reference result
-    result = get_first_char_as_int(DATASET_Q_PATH)
-    
+    result = get_first_char_as_int(INPUT_PATH)
+    if result is None:
+        print(f"Failed to read a valid integer from {INPUT_PATH}. Exiting.")
+        return
+
     # Write to expected.txt (overwrites if it already exists)
     OUT_PATH = params.dataset_intermediate_dir() / f"expected.txt"
     OUT_PATH.write_text(f"{result}\n", encoding="utf-8")
