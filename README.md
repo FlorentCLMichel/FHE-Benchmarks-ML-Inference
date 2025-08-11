@@ -1,85 +1,124 @@
 # FHE-Benchmarks-ML-Inference
-Starter repository to experiment with benchmarking for ML Inference
+Starter repository for benchmarking ML Inference workload.
 
-## Simple Plaintext Feed-Forward Model for MNIST Classification
-
-The directory `plaintext_mnist_1` contains PyTorch code to train and test a basic feed-forward neural network for the MNIST digit classification task. The model is designed to be relatively small but achieves an accuracy above 95% on the test dataset.
-
-### Getting Started
-
-To run the code, you'll first need to install the necessary Python packages. It uses the `torch` and `torchvision` modules, which are listed in the `requirements.txt` file.
-
-1. **Install dependencies:** It is recommended to use a virtual environment to manage project dependencies.
-
+To run the workload
+Clone the repository
+```console
+git clone https://github.com/code-perspective/FHE-Benchmarks-ML-Inference.git
+cd FHE-Benchmarks-ML-Inference
 ```
+Install python requirements
+```console
 pip install -r requirements.txt
 ```
 
-2. **Run the script:**
-
-```
-python3 ./mnist_1.py
-```
-
-**How it works**
-
-The `mnist_1.py` script automatically handles model training and testing:
-
-* **First Run:** When you run the script for the first time, it will train a new model on the MNIST dataset, save the trained weights to `mnist_ffnn_model.pth`, and evaluate it on the test data.
-
-* **Subsequent Runs:** If `mnist_ffnn_model.pth` already exists in the directory, the script will skip the training phase and instead load the pre-trained model directly from the file.
-
-**Example output**
-
-```
-❯ python3 ./mnist_1.py
-Using device: cuda
-
-Model 'mnist_ffnn_model.pth' not found. Starting training...
-Epoch 1/15, Loss: 0.2979, Train Accuracy: 91.04%
-Validation Loss: 0.1664, Validation Accuracy: 94.78%
-Model saved to mnist_ffnn_model.pth with validation accuracy: 94.78%
-Epoch 2/15, Loss: 0.1268, Train Accuracy: 96.22%
-Validation Loss: 0.1297, Validation Accuracy: 95.89%
-Model saved to mnist_ffnn_model.pth with validation accuracy: 95.89%
-Epoch 3/15, Loss: 0.0878, Train Accuracy: 97.31%
-Validation Loss: 0.1125, Validation Accuracy: 96.52%
-Model saved to mnist_ffnn_model.pth with validation accuracy: 96.52%
-Epoch 4/15, Loss: 0.0665, Train Accuracy: 97.92%
-Validation Loss: 0.1047, Validation Accuracy: 96.83%
-Model saved to mnist_ffnn_model.pth with validation accuracy: 96.83%
-Epoch 5/15, Loss: 0.0532, Train Accuracy: 98.26%
-Validation Loss: 0.0988, Validation Accuracy: 97.11%
-Model saved to mnist_ffnn_model.pth with validation accuracy: 97.11%
-Epoch 6/15, Loss: 0.0437, Train Accuracy: 98.49%
-Validation Loss: 0.1149, Validation Accuracy: 96.71%
-Epoch 7/15, Loss: 0.0352, Train Accuracy: 98.81%
-Validation Loss: 0.1128, Validation Accuracy: 96.91%
-Epoch 8/15, Loss: 0.0312, Train Accuracy: 98.95%
-Validation Loss: 0.1089, Validation Accuracy: 97.12%
-Model saved to mnist_ffnn_model.pth with validation accuracy: 97.12%
-Epoch 9/15, Loss: 0.0274, Train Accuracy: 99.06%
-Validation Loss: 0.1038, Validation Accuracy: 97.26%
-Model saved to mnist_ffnn_model.pth with validation accuracy: 97.26%
-Epoch 10/15, Loss: 0.0238, Train Accuracy: 99.17%
-Validation Loss: 0.1308, Validation Accuracy: 96.75%
-Epoch 11/15, Loss: 0.0232, Train Accuracy: 99.20%
-Validation Loss: 0.1140, Validation Accuracy: 97.58%
-Model saved to mnist_ffnn_model.pth with validation accuracy: 97.58%
-Epoch 12/15, Loss: 0.0207, Train Accuracy: 99.29%
-Validation Loss: 0.1451, Validation Accuracy: 96.78%
-Epoch 13/15, Loss: 0.0157, Train Accuracy: 99.47%
-Validation Loss: 0.1111, Validation Accuracy: 97.57%
-Epoch 14/15, Loss: 0.0173, Train Accuracy: 99.43%
-Validation Loss: 0.1129, Validation Accuracy: 97.52%
-Epoch 15/15, Loss: 0.0171, Train Accuracy: 99.42%
-Validation Loss: 0.1318, Validation Accuracy: 97.10%
-Training finished.
-
-Evaluating model on test data...
-Accuracy on test data: 97.37%
+Run the workload
+```console
+python3 harness/run_submission.py -h # Provide information about command-line options
 ```
 
-**Rebuilding the Model**
+The first time you run `harness/run_submission.py`, it will attempt to pull and build OpenFHE if it is not already installed, and will then build the submission itself. 
+On subsequent calls it will use the same project without re-building it unless the code has changed. An example run is provided below.
 
-If you wish to re-train the model from scratch (e.g., after making changes to the network architecture or training parameters), simply delete the `mnist_ffnn_model.pth` file and run the script again.
+
+```console
+$ python3 harness/run_submission.py -h
+usage: run_submission.py [-h] [--num_runs NUM_RUNS] [--seed SEED] [--clrtxt CLRTXT] {0,1,2,3}
+
+Run ML Inference FHE benchmark.
+
+positional arguments:
+  {0,1,2,3}            Instance size (0-single/1-small/2-medium/3-large)
+
+options:
+  -h, --help           show this help message and exit
+  --num_runs NUM_RUNS  Number of times to run steps 4-9 (default: 1)
+  --seed SEED          Random seed for dataset and query generation
+  --clrtxt CLRTXT      Specify with 1 if to rerun the cleartext computation
+
+
+$ python3 ./harness/run_submission.py 0 --seed 3 --num_runs 2
+ 
+[harness] Running submission for single inference
+[get-openfhe] Found OpenFHE installed at /usr/local/lib/ (use --force to rebuild).
+-- FOUND PACKAGE OpenFHE
+-- OpenFHE Version: 1.2.4
+-- OpenFHE installed as shared libraries: ON
+-- OpenFHE include files location: /usr/local/include/openfhe
+-- OpenFHE lib files location: /usr/local/lib
+-- OpenFHE Native Backend size: 64
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /usr/local/google/home/gshruthi/projects/FHE-Benchmarks-ML-Inference/submission/build
+[ 40%] Built target server_preprocess_model
+[ 40%] Built target client_postprocess
+[ 40%] Built target client_preprocess_input
+[ 66%] Built target client_decrypt_decode
+[ 66%] Built target client_encode_encrypt_input
+[ 80%] Built target client_key_generation
+[100%] Built target server_encrypted_compute
+00:44:42 [harness] 1: Test dataset generation completed (elapsed: 11.9646s)
+00:44:42 [harness] 2: Test dataset preprocessing completed (elapsed: 0.0029s)
+00:44:45 [harness] 3: Key Generation completed (elapsed: 3.0766s)
+         [harness] Public and evaluation keys size: 1.4G
+00:44:45 [harness] 4: (Encrypted) model preprocessing completed (elapsed: 0.0049s)
+
+         [harness] Run 1 of 2
+00:44:50 [harness] 5: Input generation completed (elapsed: 5.0768s)
+00:44:50 [harness] 6: Input preprocessing completed (elapsed: 0.0021s)
+00:44:50 [harness] 7: Input encryption completed (elapsed: 0.0339s)
+         [harness] Encrypted input size: 354.8K
+         [server] Loading keys
+         [server] run encrypted MNIST inference
+         [server] Execution time: 18 seconds
+00:45:11 [harness] 8: Encrypted ML Inference computation completed (elapsed: 20.9319s)
+         [harness] Encrypted results size: 65.6K
+00:45:11 [harness] 9: Result decryption completed (elapsed: 0.0391s)
+00:45:11 [harness] 10: Result postprocessing completed (elapsed: 0.002s)
+         [harness] Wrote expected result to:  /usr/local/google/home/gshruthi/projects/FHE-Benchmarks-ML-Inference/datasets/single/intermediate/expected.txt
+[harness] PASS  (expected=2, got=2)
+[total latency] 41.1349s
+
+         [harness] Run 2 of 2
+00:45:16 [harness] 5: Input generation completed (elapsed: 5.2668s)
+00:45:16 [harness] 6: Input preprocessing completed (elapsed: 0.0023s)
+00:45:16 [harness] 7: Input encryption completed (elapsed: 0.0359s)
+         [harness] Encrypted input size: 354.8K
+         [server] Loading keys
+         [server] run encrypted MNIST inference
+         [server] Execution time: 18 seconds
+00:45:37 [harness] 8: Encrypted ML Inference computation completed (elapsed: 21.2919s)
+         [harness] Encrypted results size: 65.6K
+00:45:37 [harness] 9: Result decryption completed (elapsed: 0.038s)
+00:45:37 [harness] 10: Result postprocessing completed (elapsed: 0.002s)
+         [harness] Wrote expected result to:  /usr/local/google/home/gshruthi/projects/FHE-Benchmarks-ML-Inference/datasets/single/intermediate/expected.txt
+[harness] PASS  (expected=2, got=2)
+[total latency] 41.6859s
+
+All steps completed for the single inference!
+```
+
+
+Sample benchmark measurements
+```
+{
+  "total_latency_ms": 41.1349,
+  "per_stage": {
+    "Test dataset generation": "11.9646s",
+    "Test dataset preprocessing": "0.0029s",
+    "Key Generation": "3.0766s",
+    "(Encrypted) model preprocessing": "0.0049s",
+    "Input generation": "5.0768s",
+    "Input preprocessing": "0.0021s",
+    "Input encryption": "0.0339s",
+    "Encrypted ML Inference computation": "20.9319s",
+    "Result decryption": "0.0391s",
+    "Result postprocessing": "0.002s"
+  },
+  "bandwidth": {
+    "Public and evaluation keys": "1.4G",
+    "Encrypted input": "354.8K",
+    "Encrypted results": "65.6K"
+  }
+}
+```
