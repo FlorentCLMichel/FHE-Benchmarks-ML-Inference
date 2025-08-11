@@ -38,39 +38,6 @@ options:
 
 
 $ python3 ./harness/run_submission.py 0 --seed 3 --num_runs 2
-[harness] Running submission for single inference
-[get-openfhe] Found OpenFHE installed at /usr/local/lib/ (use --force to rebuild).
--- FOUND PACKAGE OpenFHE
--- OpenFHE Version: 1.2.4
--- OpenFHE installed as shared libraries: ON
--- OpenFHE include files location: /usr/local/include/openfhe
--- OpenFHE lib files location: /usr/local/lib
--- OpenFHE Native Backend size: 64
--- Configuring done (0.0s)
--- Generating done (0.0s)
--- Build files have been written to: /usr/local/google/home/gshruthi/projects/FHE-Benchmarks-ML-Inference/submission/build
-[ 26%] Built target client_postprocess
-[ 26%] Built target server_preprocess_model
-[ 40%] Built target client_preprocess_input
-[ 53%] Built target client_key_generation
-[ 66%] Built target client_encode_encrypt_input
-[ 80%] Built target client_decrypt_decode
-[100%] Built target server_encrypted_compute
-00:37:53 [harness] 1: Test dataset generation completed (elapsed: 11.8615s)
-00:37:53 [harness] 2: Test dataset preprocessing completed (elapsed: 0.0021s)
-00:37:56 [harness] 3: Key Generation completed (elapsed: 3.1476s)
-         [harness] Public and evaluation keys size: 1.4G
-00:37:56 [harness] 4: (Encrypted) model preprocessing completed (elapsed: 0.0048s)
-
-         [harness] Run 1 of 2
-Traceback (most recent call last):
-  File "/usr/local/google/home/gshruthi/projects/FHE-Benchmarks-ML-Inference/./harness/run_submission.py", line 131, in <module>
-    main()
-  File "/usr/local/google/home/gshruthi/projects/FHE-Benchmarks-ML-Inference/./harness/run_submission.py", line 78, in main
-    genqry_seed = rng.integers(0,0x7fffffff)
-                  ^^^
-NameError: name 'rng' is not defined
-(bmenv) [hi on] gshruthi@gshruthi-96-core:~/projects/FHE-Benchmarks-ML-Inference$ python3 ./harness/run_submission.py 0 --seed 3 --num_runs 2
  
 [harness] Running submission for single inference
 [get-openfhe] Found OpenFHE installed at /usr/local/lib/ (use --force to rebuild).
