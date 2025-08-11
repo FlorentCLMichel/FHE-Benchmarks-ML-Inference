@@ -34,16 +34,19 @@ def parse_submission_arguments(workload: str) -> Tuple[int, InstanceParams, int,
                         help='Random seed for dataset and query generation')
     parser.add_argument('--clrtxt', type=int,
                         help='Specify with 1 if to rerun the cleartext computation')
+    parser.add_argument('--run_quality_check', type=bool, default=False,
+                        help='Specify this flag to run the quality check. instance size 0 runs on 10 samples, small on 100, medium on 1000, large on 10000 samples')
 
     args = parser.parse_args()
     size = args.size
     seed = args.seed
     num_runs = args.num_runs
     clrtxt = args.clrtxt
+    run_quality_check = args.run_quality_check
 
     # Use params.py to get instance parameters
     params = InstanceParams(size)
-    return size, params, seed, num_runs, clrtxt
+    return size, params, seed, num_runs, clrtxt, run_quality_check
 
 def ensure_directories(rootdir: Path):
     """ Check that the current directory has sub-directories

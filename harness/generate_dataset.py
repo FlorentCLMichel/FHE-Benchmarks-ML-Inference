@@ -12,7 +12,7 @@ def main():
     """
     Generate random value representing the database in the workload.
     """
-    __, params, __, __, __ = parse_submission_arguments('Generate dataset for FHE benchmark.')
+    __, params, __, __, __, __ = parse_submission_arguments('Generate dataset for FHE benchmark.')
     DATASET_PATH = params.datadir() / f"dataset.txt"
     DATASET_PATH.parent.mkdir(parents=True, exist_ok=True)
 

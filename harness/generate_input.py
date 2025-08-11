@@ -27,7 +27,7 @@ def main():
     """
     Generate random value representing the query in the workload.
     """
-    __, params, seed, __, __ = parse_submission_arguments('Generate query for FHE benchmark.')
+    __, params, seed, __, __, __ = parse_submission_arguments('Generate query for FHE benchmark.')
     DATASET_PATH = params.datadir() / f"dataset.txt"
 
     DATASET_INPUT_PATH = params.dataset_intermediate_dir() / f"plain_input.bin"
