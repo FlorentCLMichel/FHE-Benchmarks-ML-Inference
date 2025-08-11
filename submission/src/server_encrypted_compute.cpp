@@ -16,7 +16,7 @@ using namespace lbcrypto;
 int main(int argc, char* argv[]){
 
     if (argc < 2 || !std::isdigit(argv[1][0])) {
-        std::cout << "Usage: " << argv[0] << " instance-size [--count_only]\n";
+        std::cout << "Usage: " << argv[0] << " instance-size \n";
         std::cout << "  Instance-size: 0-SINGLE, 1-SMALL, 2-MEDIUM, 3-LARGE\n";
         return 0;
     }

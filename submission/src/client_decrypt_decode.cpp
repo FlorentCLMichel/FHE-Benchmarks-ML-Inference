@@ -8,26 +8,10 @@
 #include "iomanip"
 #include "limits"
 
-using namespace lbcrypto;
-using CiphertextT = ConstCiphertext<DCRTPoly>;
-using CCParamsT = CCParams<CryptoContextCKKSRNS>;
-using CryptoContextT = CryptoContext<DCRTPoly>;
-using EvalKeyT = EvalKey<DCRTPoly>;
-using PlaintextT = Plaintext;
-using PrivateKeyT = PrivateKey<DCRTPoly>;
-using PublicKeyT = PublicKey<DCRTPoly>;
+#include "mlp_encryption_utils.h"
 
-std::vector<float> mlp_decrypt(CryptoContextT v11343, CiphertextT v11344, PrivateKeyT v11345);
-template <int N>
-int argmax(float *A) {
-  int max_idx = 0;
-  for (int i = 1; i < N; i++) {
-    if (A[i] > A[max_idx]) {
-      max_idx = i;
-    }
-  }
-  return max_idx;
-}
+using namespace lbcrypto;
+
 
 int main(int argc, char* argv[]) {
     if (argc < 2 || !std::isdigit(argv[1][0])) {
@@ -55,19 +39,9 @@ int main(int argc, char* argv[]) {
 
     std::vector<float> output = mlp_decrypt(cc, ctxt, sk);
 
-    auto max_id = argmax<1024>(output.data());
+    auto max_id = argmax(output.data(), 1024);
     std::ofstream out(prms.iodir() / "result.txt");
     out << max_id << '\n';
 
     return 0;
-}
-
-std::vector<float> mlp_decrypt(CryptoContextT v11343, CiphertextT v11344, PrivateKeyT v11345) {
-  PlaintextT v11346;
-  v11343->Decrypt(v11345, v11344, &v11346);
-  v11346->SetLength(1024);
-  const auto& v11347_cast = v11346->GetCKKSPackedValue();
-  std::vector<float> v11347(v11347_cast.size());
-  std::transform(std::begin(v11347_cast), std::end(v11347_cast), std::begin(v11347), [](const std::complex<double>& c) { return c.real(); });
-  return v11347;
 }

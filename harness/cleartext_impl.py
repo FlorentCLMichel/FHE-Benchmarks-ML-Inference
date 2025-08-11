@@ -35,7 +35,7 @@ def get_first_char_as_int(file_path):
         return None
 
 def main():
-    __, params, __, __, __ = parse_submission_arguments('Generate dataset for FHE benchmark.')
+    __, params, __, __, __, __ = parse_submission_arguments('Generate dataset for FHE benchmark.')
     INPUT_PATH = params.dataset_intermediate_dir() / f"plain_input.bin"
     # Get reference result
     result = get_first_char_as_int(INPUT_PATH)

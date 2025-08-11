@@ -1,0 +1,88 @@
+#include "openfhe/pke/openfhe.h" 
+#include "mlp_encryption_utils.h"
+
+#include "ciphertext-ser.h"
+#include "cryptocontext-ser.h"
+#include "key/key-ser.h"
+#include "scheme/ckksrns/ckksrns-ser.h"
+#include "params.h"
+
+using namespace lbcrypto;
+using CiphertextT = ConstCiphertext<DCRTPoly>;
+using CCParamsT = CCParams<CryptoContextCKKSRNS>;
+using CryptoContextT = CryptoContext<DCRTPoly>;
+using EvalKeyT = EvalKey<DCRTPoly>;
+using PlaintextT = Plaintext;
+using PrivateKeyT = PrivateKey<DCRTPoly>;
+using PublicKeyT = PublicKey<DCRTPoly>;
+
+
+PublicKey<DCRTPoly> read_public_key(const InstanceParams& prms) {
+    PublicKey<DCRTPoly> pk;
+    if (!Serial::DeserializeFromFile(prms.pubkeydir()/"pk.bin", pk,
+                                    SerType::BINARY)) {
+        throw std::runtime_error("Failed to get public key from  " + prms.pubkeydir().string());
+    }
+    return pk;
+}
+
+CryptoContextT read_crypto_context(const InstanceParams& prms) {
+    CryptoContextT cc;
+    if (!Serial::DeserializeFromFile(prms.pubkeydir()/"cc.bin", cc, SerType::BINARY)) {
+        throw std::runtime_error("Failed to get CryptoContext from " + prms.pubkeydir().string());
+    }
+    return cc;
+}
+
+
+ConstCiphertext<DCRTPoly> encrypt_input(CryptoContext<DCRTPoly> cc, std::vector<float> input, PublicKey<DCRTPoly> pk) {
+  std::vector<double> v11340(std::begin(input), std::end(input));
+  uint32_t v11340_filled_n = cc->GetCryptoParameters()->GetElementParams()->GetRingDimension() / 2;
+  auto v11340_filled = v11340;
+  v11340_filled.clear();
+  v11340_filled.reserve(v11340_filled_n);
+  for (uint32_t i = 0; i < v11340_filled_n; ++i) {
+    v11340_filled.push_back(v11340[i % v11340.size()]);
+  }
+  const auto& v11341 = cc->MakeCKKSPackedPlaintext(v11340_filled);
+  const auto& v11342 = cc->Encrypt(pk, v11341);
+  return v11342;
+}
+
+std::vector<float> mlp_decrypt(CryptoContextT v11343, CiphertextT v11344, PrivateKeyT v11345) {
+  PlaintextT v11346;
+  v11343->Decrypt(v11345, v11344, &v11346);
+  v11346->SetLength(1024);
+  const auto& v11347_cast = v11346->GetCKKSPackedValue();
+  std::vector<float> v11347(v11347_cast.size());
+  std::transform(std::begin(v11347_cast), std::end(v11347_cast), std::begin(v11347), [](const std::complex<double>& c) { return c.real(); });
+  return v11347;
+}
+
+
+void load_dataset(std::vector<Sample> &dataset, const char *filename) {
+  std::ifstream file(filename);
+  Sample sample;
+  while (file >> sample.label) {
+    // Read MNIST_DIM values from file
+    for (int i = 0; i < MNIST_DIM; i++) {
+      file >> sample.image[i];
+    }
+    // Pad remaining values with 0.0 if NORMALIZED_DIM > MNIST_DIM
+    for (int i = MNIST_DIM; i < NORMALIZED_DIM; i++) {
+      sample.image[i] = 0.0f;
+    }
+
+    dataset.push_back(sample);
+  }
+}
+
+int argmax(float *A, int N) {
+  int max_idx = 0;
+  for (int i = 1; i < N; i++) {
+    if (A[i] > A[max_idx]) {
+      max_idx = i;
+    }
+  }
+  return max_idx;
+}
