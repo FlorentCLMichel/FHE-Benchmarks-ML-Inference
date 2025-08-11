@@ -57,7 +57,14 @@ else()
 endif()
 
 # --------------------------------------------------------------------
-# 4.  Each *.cpp file becomes its own executable.
+# 4.  Create mlp library
+# --------------------------------------------------------------------
+
+add_library( mlp_encryption_utils src/mlp_encryption_utils.cpp )
+add_library( mlp_openfhe src/mlp_openfhe.cpp )
+
+# --------------------------------------------------------------------
+# 5.  Each *.cpp file becomes its own executable.
 #     The seven stage names are hard-wired by the benchmark contract.
 # --------------------------------------------------------------------
  
@@ -66,11 +73,18 @@ add_executable( client_key_generation src/client_key_generation.cpp )
 add_executable( client_preprocess_input src/client_preprocess_input.cpp )
 
 add_executable( client_encode_encrypt_input src/client_encode_encrypt_input.cpp )
+target_link_libraries( client_encode_encrypt_input mlp_encryption_utils )
 
 add_executable( client_decrypt_decode src/client_decrypt_decode.cpp )
+target_link_libraries( client_decrypt_decode mlp_encryption_utils )
 
 add_executable( client_postprocess src/client_postprocess.cpp )
 
 add_executable( server_preprocess_model src/server_preprocess_model.cpp )
 
-add_executable( server_encrypted_compute src/server_encrypted_compute.cpp src/mlp_openfhe.cpp )
+add_executable( server_encrypted_compute src/server_encrypted_compute.cpp )
+target_link_libraries( server_encrypted_compute mlp_openfhe )
+
+add_executable( server_encrypted_model_quality src/server_encrypted_model_quality.cpp )
+target_link_libraries( server_encrypted_model_quality mlp_openfhe )
+target_link_libraries( server_encrypted_model_quality mlp_encryption_utils )
