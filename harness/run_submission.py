@@ -75,6 +75,7 @@ def main():
         cmd = ["python3", harness_dir/"generate_input.py", str(size)]
         if seed is not None:
             # Use a different seed for each run but derived from the base seed
+            rng = np.random.default_rng(seed)
             genqry_seed = rng.integers(0,0x7fffffff)
             cmd.extend(["--seed", str(genqry_seed)])
         subprocess.run(cmd, check=True)
@@ -91,7 +92,7 @@ def main():
 
         # 8. Server side: Run the encrypted processing run exec_dir/server_encrypted_compute
         subprocess.run([exec_dir/"server_encrypted_compute", str(size)], check=True)
-        utils.log_step(8, "Encrypted computation")
+        utils.log_step(8, "Encrypted ML Inference computation")
         utils.log_size(io_dir / "ciphertexts_download", "Encrypted results")
 
         # 9. Client-side: decrypt
