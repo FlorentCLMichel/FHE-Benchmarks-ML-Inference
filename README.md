@@ -9,6 +9,8 @@ cd FHE-Benchmarks-ML-Inference
 ```
 Install python requirements
 ```console
+python -m venv bmenv
+source ./bmenv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -23,19 +25,24 @@ On subsequent calls it will use the same project without re-building it unless t
 
 ```console
 $ python3 harness/run_submission.py -h
-usage: run_submission.py [-h] [--num_runs NUM_RUNS] [--seed SEED] [--clrtxt CLRTXT] {0,1,2,3}
+usage: run_submission.py [-h] [--num_runs NUM_RUNS] [--seed SEED] [--clrtxt CLRTXT]
+                         [--run_quality_check RUN_QUALITY_CHECK]
+                         {0,1,2,3}
 
 Run ML Inference FHE benchmark.
 
 positional arguments:
-  {0,1,2,3}            Instance size (0-single/1-small/2-medium/3-large)
+  {0,1,2,3}             Instance size (0-single/1-small/2-medium/3-large)
 
 options:
-  -h, --help           show this help message and exit
-  --num_runs NUM_RUNS  Number of times to run steps 4-9 (default: 1)
-  --seed SEED          Random seed for dataset and query generation
-  --clrtxt CLRTXT      Specify with 1 if to rerun the cleartext computation
-
+  -h, --help            show this help message and exit
+  --num_runs NUM_RUNS   Number of times to run steps 4-9 (default: 1)
+  --seed SEED           Random seed for dataset and query generation
+  --clrtxt CLRTXT       Specify with 1 if to rerun the cleartext computation
+  --run_quality_check RUN_QUALITY_CHECK
+                        Specify this flag to run the quality check. instance
+                        size 0 runs on 10 samples, small on 100, medium on
+                        1000, large on 10000 samples
 
 $ python3 ./harness/run_submission.py 0 --seed 3 --num_runs 2
  
