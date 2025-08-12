@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
     }
     std::cout << "         [server] Loading keys" << std::endl;
 
-    CiphertextT ctxt;
+    Ciphertext<DCRTPoly> ctxt;
     if (!Serial::DeserializeFromFile(prms.ctxtupdir()/"cipher_input.bin", ctxt, SerType::BINARY)) {
         throw std::runtime_error("Failed to get ciphertexts from " + prms.ctxtupdir().string());
     }
