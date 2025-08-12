@@ -47,31 +47,31 @@ def main():
     # 1. Client-side: Generate the test datasets
     cmd = ["python3", harness_dir/"generate_dataset.py", str(size)]
     subprocess.run(cmd, check=True)
-    utils.log_step(1, "Test dataset generation")
+    utils.log_step(1, "Harness: MNIST Test dataset generation")
 
     # 2. Client-side: Preprocess the dataset using exec_dir/client_preprocess_dataset
     subprocess.run([exec_dir/"client_preprocess_dataset", str(size)], check=True)
-    utils.log_step(2, "Test dataset preprocessing")
+    utils.log_step(2, "Harness: MNIST Test dataset preprocessing")
 
     # 3. Client-side: Generate the cryptographic keys 
     # Note: this does not use the rng seed above, it lets the implementation
     #   handle its own prg needs. It means that even if called with the same
     #   seed multiple times, the keys and ciphertexts will still be different.
     subprocess.run([exec_dir/"client_key_generation", str(size)], check=True)
-    utils.log_step(3, "Key Generation")
+    utils.log_step(3, "Client: Key Generation")
     # Report size of keys and encrypted data
-    utils.log_size(io_dir / "public_keys", "Public and evaluation keys")
+    utils.log_size(io_dir / "public_keys", "Client: Public and evaluation keys")
 
     # 4. Server-side: Preprocess the (encrypted) dataset using exec_dir/server_preprocess_model
     subprocess.run(exec_dir/"server_preprocess_model", check=True)
-    utils.log_step(4, "(Encrypted) model preprocessing")    
+    utils.log_step(4, "Server: (Encrypted) model preprocessing")    
 
     if quality_check:
         # Run the quality check
         # This is a server-side step, so we run it in the server directory
         cmd = [exec_dir/"server_encrypted_model_quality", str(size)]
         subprocess.run(cmd, check=True)
-        utils.log_step(5, "Quality check")
+        utils.log_step(5, "Server: Encrypted inference model quality check")
         print("         [harness] Wrote quality result to: ", params.iodir() / "quality.txt")
     else:
         # Run steps 5-11 multiple times if requested
@@ -87,29 +87,30 @@ def main():
                 genqry_seed = rng.integers(0,0x7fffffff)
                 cmd.extend(["--seed", str(genqry_seed)])
             subprocess.run(cmd, check=True)
-            utils.log_step(5, "Input generation")
+            utils.log_step(5, "Harness: Input generation")
 
             # 6. Client-side: Preprocess input using exec_dir/client_preprocess_input
             subprocess.run([exec_dir/"client_preprocess_input", str(size)], check=True)
-            utils.log_step(6, "Input preprocessing")
+            utils.log_step(6, "Client: Input preprocessing")
 
             # 7. Client-side: Encrypt the input
             subprocess.run([exec_dir/"client_encode_encrypt_input", str(size)], check=True)
-            utils.log_step(7, "Input encryption")
-            utils.log_size(io_dir / "ciphertexts_upload", "Encrypted input")
+            utils.log_step(7, "Client: Input encryption")
+            utils.log_size(io_dir / "ciphertexts_upload", "Client: Encrypted input")
 
             # 8. Server side: Run the encrypted processing run exec_dir/server_encrypted_compute
             subprocess.run([exec_dir/"server_encrypted_compute", str(size)], check=True)
-            utils.log_step(8, "Encrypted ML Inference computation")
-            utils.log_size(io_dir / "ciphertexts_download", "Encrypted results")
+            utils.log_step(8, "Server: Encrypted ML Inference computation")
+            # Report size of encrypted results
+            utils.log_size(io_dir / "ciphertexts_download", "Client: Encrypted results")
 
             # 9. Client-side: decrypt
             subprocess.run([exec_dir/"client_decrypt_decode", str(size)], check=True)
-            utils.log_step(9, "Result decryption")
+            utils.log_step(9, "Client: Result decryption")
 
             # 10. Client-side: post-process
             subprocess.run([exec_dir/"client_postprocess", str(size)], check=True)
-            utils.log_step(10, "Result postprocessing")
+            utils.log_step(10, "Client: Result postprocessing")
 
             # 11.1 Run the cleartext computation in cleartext_impl.py
             # If the cleartext computation takes too long, compute it once for a given state and skip this step.
