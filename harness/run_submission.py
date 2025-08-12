@@ -49,37 +49,33 @@ def main():
     subprocess.run(cmd, check=True)
     utils.log_step(1, "Harness: MNIST Test dataset generation")
 
-    # 2. Client-side: Preprocess the dataset using exec_dir/client_preprocess_dataset
-    subprocess.run([exec_dir/"client_preprocess_dataset", str(size)], check=True)
-    utils.log_step(2, "Harness: MNIST Test dataset preprocessing")
-
-    # 3. Client-side: Generate the cryptographic keys 
+    # 2. Client-side: Generate the cryptographic keys 
     # Note: this does not use the rng seed above, it lets the implementation
     #   handle its own prg needs. It means that even if called with the same
     #   seed multiple times, the keys and ciphertexts will still be different.
     subprocess.run([exec_dir/"client_key_generation", str(size)], check=True)
-    utils.log_step(3, "Client: Key Generation")
+    utils.log_step(2 , "Client: Key Generation")
     # Report size of keys and encrypted data
     utils.log_size(io_dir / "public_keys", "Client: Public and evaluation keys")
 
-    # 4. Server-side: Preprocess the (encrypted) dataset using exec_dir/server_preprocess_model
+    # 3. Server-side: Preprocess the (encrypted) dataset using exec_dir/server_preprocess_model
     subprocess.run(exec_dir/"server_preprocess_model", check=True)
-    utils.log_step(4, "Server: (Encrypted) model preprocessing")    
+    utils.log_step(3, "Server: (Encrypted) model preprocessing")
 
     if quality_check:
         # Run the quality check
         # This is a server-side step, so we run it in the server directory
         cmd = [exec_dir/"server_encrypted_model_quality", str(size)]
         subprocess.run(cmd, check=True)
-        utils.log_step(5, "Server: Encrypted inference model quality check")
+        utils.log_step(4, "Server: Encrypted inference model quality check")
         print("         [harness] Wrote quality result to: ", params.iodir() / "quality.txt")
     else:
-        # Run steps 5-11 multiple times if requested
+        # Run steps 4-10 multiple times if requested
         for run in range(num_runs):
             if num_runs > 1:
                 print(f"\n         [harness] Run {run+1} of {num_runs}")
 
-            # 5. Client-side: Generate a new random input using harness/generate_input.py
+            # 4. Client-side: Generate a new random input using harness/generate_input.py
             cmd = ["python3", harness_dir/"generate_input.py", str(size)]
             if seed is not None:
                 # Use a different seed for each run but derived from the base seed
@@ -87,39 +83,39 @@ def main():
                 genqry_seed = rng.integers(0,0x7fffffff)
                 cmd.extend(["--seed", str(genqry_seed)])
             subprocess.run(cmd, check=True)
-            utils.log_step(5, "Harness: Input generation")
+            utils.log_step(4, "Harness: Input generation")
 
-            # 6. Client-side: Preprocess input using exec_dir/client_preprocess_input
+            # 5. Client-side: Preprocess input using exec_dir/client_preprocess_input
             subprocess.run([exec_dir/"client_preprocess_input", str(size)], check=True)
-            utils.log_step(6, "Client: Input preprocessing")
+            utils.log_step(5, "Client: Input preprocessing")
 
-            # 7. Client-side: Encrypt the input
+            # 6. Client-side: Encrypt the input
             subprocess.run([exec_dir/"client_encode_encrypt_input", str(size)], check=True)
-            utils.log_step(7, "Client: Input encryption")
+            utils.log_step(6, "Client: Input encryption")
             utils.log_size(io_dir / "ciphertexts_upload", "Client: Encrypted input")
 
-            # 8. Server side: Run the encrypted processing run exec_dir/server_encrypted_compute
+            # 7. Server side: Run the encrypted processing run exec_dir/server_encrypted_compute
             subprocess.run([exec_dir/"server_encrypted_compute", str(size)], check=True)
-            utils.log_step(8, "Server: Encrypted ML Inference computation")
+            utils.log_step(7, "Server: Encrypted ML Inference computation")
             # Report size of encrypted results
             utils.log_size(io_dir / "ciphertexts_download", "Client: Encrypted results")
 
-            # 9. Client-side: decrypt
+            # 8. Client-side: decrypt
             subprocess.run([exec_dir/"client_decrypt_decode", str(size)], check=True)
-            utils.log_step(9, "Client: Result decryption")
+            utils.log_step(8, "Client: Result decryption")
 
-            # 10. Client-side: post-process
+            # 9. Client-side: post-process
             subprocess.run([exec_dir/"client_postprocess", str(size)], check=True)
-            utils.log_step(10, "Client: Result postprocessing")
+            utils.log_step(9, "Client: Result postprocessing")
 
-            # 11.1 Run the cleartext computation in cleartext_impl.py
+            # 10.1 Run the cleartext computation in cleartext_impl.py
             # If the cleartext computation takes too long, compute it once for a given state and skip this step.
             # One can store the results for multiple runs; currently, storing expected.txt works only with num_runs = 1.
             if clrtxt is None:
                 subprocess.run(["python3", harness_dir/"cleartext_impl.py", str(size)], check=True)
                 print("         [harness] Wrote expected result to: ", params.dataset_intermediate_dir() / "expected.txt")
 
-            # 11.2 Verify the result
+            # 10.2 Verify the result
             expected_file = params.dataset_intermediate_dir() / "expected.txt"
             result_file = io_dir / "result.txt"
 
@@ -130,7 +126,7 @@ def main():
             subprocess.run(["python3", harness_dir/"verify_result.py",
                 str(expected_file), str(result_file)], check=False)
 
-            # 12. Store measurements
+            # 11. Store measurements
             run_path = params.measuredir() / f"results-{run+1}.json"
             run_path.parent.mkdir(parents=True, exist_ok=True)
             utils.save_run(run_path)
