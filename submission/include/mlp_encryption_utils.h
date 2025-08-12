@@ -1,7 +1,7 @@
 #ifndef MLP_ENCRYPTION_UTILS_H_
 #define MLP_ENCRYPTION_UTILS_H_
 
-#include "openfhe/pke/openfhe.h"
+#include "openfhe.h"
 #include "params.h"
 
 using namespace lbcrypto;

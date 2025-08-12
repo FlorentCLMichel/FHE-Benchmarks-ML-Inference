@@ -1,4 +1,4 @@
-#include "openfhe/pke/openfhe.h" 
+#include "openfhe.h" 
 #include "mlp_encryption_utils.h"
 
 #include "ciphertext-ser.h"
