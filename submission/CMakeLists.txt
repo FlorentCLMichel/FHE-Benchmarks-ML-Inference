@@ -47,6 +47,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 link_directories( ${OpenFHE_LIBDIR} )
 link_directories( ${OPENMP_LIBRARIES} )
+link_directories( ${CMAKE_CURRENT_SOURCE_DIR}/pre-built-library )
 if(BUILD_STATIC)
     set( CMAKE_EXE_LINKER_FLAGS "${OpenFHE_EXE_LINKER_FLAGS} -static")
     link_libraries( ${OpenFHE_STATIC_LIBRARIES} )
@@ -61,7 +62,10 @@ endif()
 # --------------------------------------------------------------------
 
 add_library( mlp_encryption_utils src/mlp_encryption_utils.cpp )
-add_library( mlp_openfhe src/mlp_openfhe.cpp )
+
+# Use pre-built mlp_openfhe library
+add_library( mlp_openfhe STATIC IMPORTED )
+set_target_properties( mlp_openfhe PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/pre-built-library/libmlp_openfhe.a )
 
 # --------------------------------------------------------------------
 # 5.  Each *.cpp file becomes its own executable.
