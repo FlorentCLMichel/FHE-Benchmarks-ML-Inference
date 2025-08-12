@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(add_openfhe LANGUAGES CXX)
+project(mnist_inference LANGUAGES CXX)
 
 # --------------------------------------------------------------------
 # 1.  Compiler / flags
@@ -48,6 +48,14 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 link_directories( ${OpenFHE_LIBDIR} )
 link_directories( ${OPENMP_LIBRARIES} )
 link_directories( ${CMAKE_CURRENT_SOURCE_DIR}/pre-built-library )
+
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_RPATH "${OpenFHE_LIBDIR}")
+set(CMAKE_INSTALL_RPATH "${OpenFHE_LIBDIR}")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+# If a symbol lookup error occurs, you need to set the LD_LIBRARY_PATH environment to the OpenFHE lib directory.
+# export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/path/to/OpenFHE/lib
+
 if(BUILD_STATIC)
     set( CMAKE_EXE_LINKER_FLAGS "${OpenFHE_EXE_LINKER_FLAGS} -static")
     link_libraries( ${OpenFHE_STATIC_LIBRARIES} )

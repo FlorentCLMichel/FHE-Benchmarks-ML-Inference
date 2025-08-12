@@ -1,21 +1,5 @@
-#include "openfhe.h"
-// header files needed for de/serialization
-#include "ciphertext-ser.h"
-#include "cryptocontext-ser.h"
-#include "key/key-ser.h"
-#include "scheme/ckksrns/ckksrns-ser.h"
-#include "params.h"
-
-using namespace lbcrypto;
-using CiphertextT = ConstCiphertext<DCRTPoly>;
-using CCParamsT = CCParams<CryptoContextCKKSRNS>;
-using CryptoContextT = CryptoContext<DCRTPoly>;
-using EvalKeyT = EvalKey<DCRTPoly>;
-using PlaintextT = Plaintext;
-using PrivateKeyT = PrivateKey<DCRTPoly>;
-using PublicKeyT = PublicKey<DCRTPoly>;
-
-
+#include "utils.h"
+#include "mlp_encryption_utils.h"
 
 CryptoContextT mlp_generate_crypto_context() {
   CCParamsT v11348;

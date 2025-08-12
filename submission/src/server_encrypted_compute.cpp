@@ -1,14 +1,8 @@
 
-#include "openfhe.h" 
-// header files needed for de/serialization
-#include "ciphertext-ser.h"
-#include "cryptocontext-ser.h"
-#include "key/key-ser.h"
-#include "scheme/ckksrns/ckksrns-ser.h"
+#include "utils.h"
 #include "params.h"
-#include <chrono>
-
 #include "mlp_openfhe.h"
+#include <chrono>
 
 using namespace lbcrypto;
 

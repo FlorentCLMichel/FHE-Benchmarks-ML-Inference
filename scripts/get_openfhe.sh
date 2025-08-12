@@ -9,7 +9,7 @@
 set -euo pipefail
 
 # -------- configurable -------------------------------------------------
-TAG="v1.2.4"                     # bump only after CI/Docker update
+TAG="v1.3.1"                     # bump only after CI/Docker update
 ROOT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 SRC_DIR="$ROOT_DIR/third_party/openfhe-src"          # git clone here
 INSTALL_DIR="$ROOT_DIR/third_party/openfhe"          # cmake --install here
@@ -20,11 +20,12 @@ FORCE=0
 [[ ${1:-} == "--force" ]] && FORCE=1
 
 # 0) short-circuit if library already installed and not forcing rebuild
-if [[ -d "/usr/local/lib/OpenFHE" && $FORCE -eq 0 ]]; then
-    echo "[get-openfhe] Found OpenFHE installed at /usr/local/lib/ (use --force to rebuild)."
-    exit 0
-fi
-if [[ -f "$INSTALL_DIR/lib/libopenfhe.a" && $FORCE -eq 0 ]]; then
+# Uncomment this if you want to use a system-wide OpenFHE installation
+# if [[ -d "/usr/local/lib/OpenFHE" && $FORCE -eq 0 ]]; then
+#     echo "[get-openfhe] Found OpenFHE installed at /usr/local/lib/ (use --force to rebuild)."
+#     exit 0
+# fi
+if [[ -d "$INSTALL_DIR/lib" && $FORCE -eq 0 ]]; then
     echo "[get-openfhe] Found OpenFHE at $INSTALL_DIR (use --force to rebuild)."
     exit 0
 fi
