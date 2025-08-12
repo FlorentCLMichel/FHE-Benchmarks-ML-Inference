@@ -2,7 +2,7 @@
 #ifndef MLP_OPENFHE_H_
 #define MLP_OPENFHE_H_
 
-#include "openfhe/pke/openfhe.h"
+#include "openfhe.h"
 
 using namespace lbcrypto;
 using CiphertextT = ConstCiphertext<DCRTPoly>;
