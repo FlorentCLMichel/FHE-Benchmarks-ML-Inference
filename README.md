@@ -49,7 +49,7 @@ $ python3 ./harness/run_submission.py 0 --seed 3 --num_runs 2
 [harness] Running submission for single inference
 [get-openfhe] Found OpenFHE installed at /usr/local/lib/ (use --force to rebuild).
 -- FOUND PACKAGE OpenFHE
--- OpenFHE Version: 1.2.4
+-- OpenFHE Version: 1.3.1
 -- OpenFHE installed as shared libraries: ON
 -- OpenFHE include files location: /usr/local/include/openfhe
 -- OpenFHE lib files location: /usr/local/lib

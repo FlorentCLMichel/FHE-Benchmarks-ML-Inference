@@ -9,8 +9,8 @@ TASK_DIR="$1"
 BUILD="$TASK_DIR/build"
 NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu || echo 4)
 
-# "$ROOT/scripts/get-openfhe.sh" >/dev/null
+# Set -DCMAKE_PREFIX_PATH to the install directory of OpenFHE
 cmake -S "$TASK_DIR" -B "$BUILD" \
-      -DOpenFHE_DIR="$ROOT/third_party/openfhe/lib"
+      -DCMAKE_PREFIX_PATH="$ROOT/third_party/openfhe"
 cd "$TASK_DIR/build"
 make -j"$NPROC"

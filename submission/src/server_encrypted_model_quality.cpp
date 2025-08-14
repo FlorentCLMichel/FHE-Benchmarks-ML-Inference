@@ -1,12 +1,5 @@
 
-#include "openfhe.h" 
-// header files needed for de/serialization
-#include "ciphertext-ser.h"
-#include "cryptocontext-ser.h"
-#include "key/key-ser.h"
-#include "scheme/ckksrns/ckksrns-ser.h"
-#include "params.h"
-#include <chrono>
+#include "utils.h"
 
 #include "mlp_openfhe.h"
 #include "mlp_encryption_utils.h"
