@@ -11,7 +11,6 @@ from utils import parse_submission_arguments
 def main():
 
     """
-    Usage:  python3 calculate_quality.py  <expected_file>  <result_file> <num_samples>
     Calculates accuracy by comparing labels line by line.
     Each file should contain one label per line.
     Returns accuracy metric and prints results.
