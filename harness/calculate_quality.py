@@ -20,8 +20,16 @@ def main():
 
     expected_file = params.datadir() / "dataset_labels.txt"
     result_file   = params.iodir() / "quality_result.txt"
-    num_samples   = 10 if params.size == utils.SINGLE else 10000
-
+    
+    num_samples   = 10 
+    if params.size == utils.SINGLE:
+        num_samples = 10
+    elif params.size == utils.SMALL:
+        num_samples = 100
+    elif params.size == utils.MEDIUM:
+        num_samples = 1000
+    elif params.size == utils.LARGE:
+        num_samples = 10000
 
     try:
         # Read expected labels (one per line)

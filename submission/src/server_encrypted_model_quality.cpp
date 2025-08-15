@@ -20,6 +20,10 @@ int main(int argc, char* argv[]){
     int batch_size = 10;
     if (size == 0) {
         batch_size = 10; // Run on 10 samples for SINGLE instance
+    } else if (size == 1) {
+        batch_size = 100; // Run on 100 samples for SMALL instance
+    } else if (size == 2) {
+        batch_size = 1000; // Run on 1000 samples for MEDIUM instance
     } else {
         batch_size = 10000; // Run on 10000 samples for LARGE instance
     }

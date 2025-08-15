@@ -21,8 +21,10 @@ def main():
     # Get the arguments
     size, params, seed, num_runs, clrtxt, quality_check = utils.parse_submission_arguments('Run ML Inference FHE benchmark.')
     if size > utils.SINGLE and not quality_check:
-        print(f"Batch size is supported for quality check.")
+        print(f"Currently only single inference is supported for measuring latency.")
         sys.exit(1)
+    if size < utils.LARGE and quality_check:
+        print(f"Use LARGE to measure quality across the entire dataset")
     test = instance_name(size)
     print(f"\n[harness] Running submission for {test} inference")
 
