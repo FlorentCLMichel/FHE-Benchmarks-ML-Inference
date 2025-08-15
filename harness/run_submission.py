@@ -21,8 +21,10 @@ def main():
     # Get the arguments
     size, params, seed, num_runs, clrtxt, quality_check = utils.parse_submission_arguments('Run ML Inference FHE benchmark.')
     if size > utils.SINGLE and not quality_check:
-        print(f"Batch size is supported for quality check.")
+        print(f"Currently only single inference is supported for measuring latency.")
         sys.exit(1)
+    if size < utils.LARGE and quality_check:
+        print(f"Use LARGE to measure quality across the entire dataset")
     test = instance_name(size)
     print(f"\n[harness] Running submission for {test} inference")
 
@@ -63,12 +65,14 @@ def main():
     utils.log_step(3, "Server: (Encrypted) model preprocessing")
 
     if quality_check:
-        # Run the quality check
-        # This is a server-side step, so we run it in the server directory
+        # 4. Run the quality check for encrypted inference.
         cmd = [exec_dir/"server_encrypted_model_quality", str(size)]
         subprocess.run(cmd, check=True)
         utils.log_step(4, "Server: Encrypted inference model quality check")
-        print("         [harness] Wrote quality result to: ", params.iodir() / "quality.txt")
+
+        # 5. Calculate and save accuracy.
+        subprocess.run(["python3", harness_dir/"calculate_quality.py",
+            str(size)], check=True)
     else:
         # Run steps 4-10 multiple times if requested
         for run in range(num_runs):

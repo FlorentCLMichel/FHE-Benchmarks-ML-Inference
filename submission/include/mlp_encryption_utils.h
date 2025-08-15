@@ -17,14 +17,15 @@ using PublicKeyT = PublicKey<DCRTPoly>;
 #define NORMALIZED_DIM 1024
 
 struct Sample {
-  int label;
   float image[NORMALIZED_DIM];
 };
 
 ConstCiphertext<DCRTPoly> encrypt_input(CryptoContext<DCRTPoly> cc, std::vector<float> input, PublicKey<DCRTPoly> pk);
 std::vector<float> mlp_decrypt(CryptoContextT v11343, CiphertextT v11344, PrivateKeyT v11345);
 PublicKey<DCRTPoly> read_public_key(const InstanceParams& prms);
+PrivateKey<DCRTPoly> read_secret_key(const InstanceParams& prms);
 CryptoContext<DCRTPoly> read_crypto_context(const InstanceParams& prms);
+void read_eval_keys(const InstanceParams& prms, CryptoContextT cc);
 void load_dataset(std::vector<Sample> &dataset, const char *filename);
 int argmax(float *A, int N);
 
