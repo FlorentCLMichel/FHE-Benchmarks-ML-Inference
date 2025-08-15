@@ -20,54 +20,24 @@ int main(int argc, char* argv[]){
     int batch_size = 10;
     if (size == 0) {
         batch_size = 10; // Run on 10 samples for SINGLE instance
-    } else if (size == 1) {
-        batch_size = 100; // Run on 100 samples for SMALL instance
-    } else if (size == 2) {
-        batch_size = 1000; // Run on 1000 samples for MEDIUM instance
-    } else if (size == 3) {
+    } else {
         batch_size = 10000; // Run on 10000 samples for LARGE instance
     }
     
-    CryptoContextT cc;
+    CryptoContext<DCRTPoly> cc = read_crypto_context(prms);
+    read_eval_keys(prms, cc);
+    PublicKey<DCRTPoly> pk = read_public_key(prms);
 
-    if (!Serial::DeserializeFromFile(prms.pubkeydir()/"cc.bin", cc,
-                                    SerType::BINARY)) {
-        throw std::runtime_error("Failed to get CryptoContext from  " + prms.pubkeydir().string());
-    }
-    PublicKeyT pk;
-    if (!Serial::DeserializeFromFile(prms.pubkeydir()/"pk.bin", pk,
-                                    SerType::BINARY)) {
-        throw std::runtime_error("Failed to get public key from  " + prms.pubkeydir().string());
-    }
-
-    std::ifstream emult_file(prms.pubkeydir()/"mk.bin", std::ios::in | std::ios::binary);
-    if (!emult_file.is_open() ||
-        !cc->DeserializeEvalMultKey(emult_file, SerType::BINARY)) {
-      throw std::runtime_error(
-        "Failed to get re-linearization key from " +prms.pubkeydir().string());
-    }
-
-    std::ifstream erot_file(prms.pubkeydir()/"rk.bin", std::ios::in | std::ios::binary);
-    if (!erot_file.is_open() ||
-        !cc->DeserializeEvalAutomorphismKey(erot_file, SerType::BINARY)) {
-      throw std::runtime_error(
-        "Failed to get rotation keys from " + prms.pubkeydir().string());
-    }
-
-    PrivateKeyT secretKey;
-    if (!Serial::DeserializeFromFile(prms.seckeydir()/"sk.bin", secretKey,
-                                    SerType::BINARY)) {
-        throw std::runtime_error("Failed to get secret key from " + prms.seckeydir().string());
-    }
+    PrivateKeyT secretKey = read_secret_key(prms);
 
     std::cout << "         [server] Loading keys" << std::endl;
 
     std::vector<Sample> dataset;
-    std::string dataset_path = prms.datadir() / "dataset.txt";
+    std::string dataset_path = prms.datadir() / "dataset_pixels.txt";
     load_dataset(dataset, dataset_path.c_str());
 
-    int accurate = 0;
-
+    fs::create_directories(prms.iodir());
+    std::ofstream out(prms.iodir() / "quality_result.txt");
     for (int i = 0; i < batch_size; ++i) {
         auto *input = dataset[i].image;
         std::cout << "         [server] Processing input: " << i+1 << "/" << batch_size << std::endl;
@@ -82,25 +52,11 @@ int main(int argc, char* argv[]){
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
         std::cout << "         [server]     Encrypted inference time: " << duration.count() << " seconds" << std::endl;
 
-        std::vector<float> output =
-            mlp_decrypt(cc, output_encrypted, secretKey);
+        std::vector<float> output = mlp_decrypt(cc, output_encrypted, secretKey);
 
         auto result = argmax(output.data(), 1024);
-        auto expected = dataset[i].label;
-
-        std::cout << "         [server]     Result: " << result << ", Expected: " << expected << std::endl;
-
-        if (result == expected) {
-            accurate++;
-        }
+        std::cout << "         [server]     Result: " << result << std::endl;
+        out << result << '\n';
     }
-
-    
-    fs::create_directories(prms.iodir());
-    std::ofstream out(prms.iodir() / "quality.txt");
-    out << "batch_size: " << batch_size << '\n';
-    out << "accuracy: " << static_cast<float>(accurate) / batch_size << '\n';
-
-
     return 0;
 }

@@ -1,5 +1,7 @@
 #include "utils.h" 
 #include "mlp_encryption_utils.h"
+#include <sstream>
+#include <string>
 
 PublicKey<DCRTPoly> read_public_key(const InstanceParams& prms) {
     PublicKey<DCRTPoly> pk;
@@ -10,12 +12,37 @@ PublicKey<DCRTPoly> read_public_key(const InstanceParams& prms) {
     return pk;
 }
 
+PrivateKey<DCRTPoly> read_secret_key(const InstanceParams& prms) {
+    PrivateKey<DCRTPoly> sk;
+    if (!Serial::DeserializeFromFile(prms.seckeydir()/"sk.bin", sk,
+                                    SerType::BINARY)) {
+        throw std::runtime_error("Failed to get secret key from  " + prms.seckeydir().string());
+    }
+    return sk;
+}
+
 CryptoContextT read_crypto_context(const InstanceParams& prms) {
     CryptoContextT cc;
     if (!Serial::DeserializeFromFile(prms.pubkeydir()/"cc.bin", cc, SerType::BINARY)) {
         throw std::runtime_error("Failed to get CryptoContext from " + prms.pubkeydir().string());
     }
     return cc;
+}
+
+void read_eval_keys(const InstanceParams& prms, CryptoContextT cc) {
+    std::ifstream emult_file(prms.pubkeydir()/"mk.bin", std::ios::in | std::ios::binary);
+    if (!emult_file.is_open() ||
+        !cc->DeserializeEvalMultKey(emult_file, SerType::BINARY)) {
+      throw std::runtime_error(
+        "Failed to get re-linearization key from " +prms.pubkeydir().string());
+    }
+
+    std::ifstream erot_file(prms.pubkeydir()/"rk.bin", std::ios::in | std::ios::binary);
+    if (!erot_file.is_open() ||
+        !cc->DeserializeEvalAutomorphismKey(erot_file, SerType::BINARY)) {
+      throw std::runtime_error(
+        "Failed to get rotation keys from " + prms.pubkeydir().string());
+    }
 }
 
 
@@ -47,10 +74,12 @@ std::vector<float> mlp_decrypt(CryptoContextT v11343, CiphertextT v11344, Privat
 void load_dataset(std::vector<Sample> &dataset, const char *filename) {
   std::ifstream file(filename);
   Sample sample;
-  while (file >> sample.label) {
+  std::string line;
+  while (std::getline(file, line)) {
+    std::istringstream iss(line);
     // Read MNIST_DIM values from file
     for (int i = 0; i < MNIST_DIM; i++) {
-      file >> sample.image[i];
+      iss >> sample.image[i];
     }
     // Pad remaining values with 0.0 if NORMALIZED_DIM > MNIST_DIM
     for (int i = MNIST_DIM; i < NORMALIZED_DIM; i++) {

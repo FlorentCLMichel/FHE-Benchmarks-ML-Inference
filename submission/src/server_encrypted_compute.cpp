@@ -2,6 +2,7 @@
 #include "utils.h"
 #include "params.h"
 #include "mlp_openfhe.h"
+#include "mlp_encryption_utils.h"
 #include <chrono>
 
 using namespace lbcrypto;
@@ -17,31 +18,10 @@ int main(int argc, char* argv[]){
     auto size = static_cast<InstanceSize>(std::stoi(argv[1]));
     InstanceParams prms(size);
 
-    CryptoContext<DCRTPoly> cc;
-
-    if (!Serial::DeserializeFromFile(prms.pubkeydir()/"cc.bin", cc,
-                                    SerType::BINARY)) {
-        throw std::runtime_error("Failed to get CryptoContext from  " + prms.pubkeydir().string());
-    }
-    PublicKey<DCRTPoly> pk;
-    if (!Serial::DeserializeFromFile(prms.pubkeydir()/"pk.bin", pk,
-                                    SerType::BINARY)) {
-        throw std::runtime_error("Failed to get public key from  " + prms.pubkeydir().string());
-    }
-
-    std::ifstream emult_file(prms.pubkeydir()/"mk.bin", std::ios::in | std::ios::binary);
-    if (!emult_file.is_open() ||
-        !cc->DeserializeEvalMultKey(emult_file, SerType::BINARY)) {
-      throw std::runtime_error(
-        "Failed to get re-linearization key from " +prms.pubkeydir().string());
-    }
-
-    std::ifstream erot_file(prms.pubkeydir()/"rk.bin", std::ios::in | std::ios::binary);
-    if (!erot_file.is_open() ||
-        !cc->DeserializeEvalAutomorphismKey(erot_file, SerType::BINARY)) {
-      throw std::runtime_error(
-        "Failed to get rotation keys from " + prms.pubkeydir().string());
-    }
+    CryptoContext<DCRTPoly> cc = read_crypto_context(prms);
+    read_eval_keys(prms, cc);
+    PublicKey<DCRTPoly> pk = read_public_key(prms);
+    
     std::cout << "         [server] Loading keys" << std::endl;
 
     Ciphertext<DCRTPoly> ctxt;

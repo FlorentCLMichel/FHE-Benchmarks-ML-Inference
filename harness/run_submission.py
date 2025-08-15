@@ -63,12 +63,14 @@ def main():
     utils.log_step(3, "Server: (Encrypted) model preprocessing")
 
     if quality_check:
-        # Run the quality check
-        # This is a server-side step, so we run it in the server directory
+        # 4. Run the quality check for encrypted inference.
         cmd = [exec_dir/"server_encrypted_model_quality", str(size)]
         subprocess.run(cmd, check=True)
         utils.log_step(4, "Server: Encrypted inference model quality check")
-        print("         [harness] Wrote quality result to: ", params.iodir() / "quality.txt")
+
+        # 5. Calculate and save accuracy.
+        subprocess.run(["python3", harness_dir/"calculate_quality.py",
+            str(size)], check=True)
     else:
         # Run steps 4-10 multiple times if requested
         for run in range(num_runs):

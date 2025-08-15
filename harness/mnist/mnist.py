@@ -159,14 +159,14 @@ def test_model(model, test_loader, device):
     print(f'Accuracy on test data: {accuracy:.2f}%')
     return accuracy
 
-# Function to export test data to file.
+# Function to export test data to separate files.
 def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_samples=-1):
     """
-    Export MNIST test dataset to a text file.
+    Export MNIST test dataset to separate label and pixel files.
     
     Args:
         data_dir (str): Directory to load dataset from
-        output_file (str): Output file path
+        output_file (str): Base output file path (will create .labels and .pixels files)
         num_samples (int): Number of samples to export (-1 for all)
     """
     transform = transforms.Compose([
@@ -178,7 +178,12 @@ def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_sample
     total_samples = len(test_dataset)
     samples_to_export = total_samples if num_samples == -1 else min(num_samples, total_samples)
     
-    with open(output_file, 'w') as f:
+    # Create separate file names for labels and pixels
+    base_name = str(output_file).rsplit('.', 1)[0] if '.' in str(output_file) else str(output_file)
+    labels_file = f"{base_name}_labels.txt"
+    pixels_file = f"{base_name}_pixels.txt"
+    
+    with open(labels_file, 'w') as label_f, open(pixels_file, 'w') as pixel_f:
         for i, (image, label) in enumerate(test_dataset):
             if i >= samples_to_export:
                 break
@@ -186,11 +191,12 @@ def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_sample
             # Flatten the image to 784 dimensions (28x28)
             flattened_image = image.view(-1).numpy()
             
-            # Write label first, then the 784 pixel values
-            f.write(f"{label}")
-            for pixel in flattened_image:
-                f.write(f" {pixel:.6f}")
-            f.write("\n")
+            # Write label to labels file
+            label_f.write(f"{label}\n")
+            
+            # Write pixel values to pixels file
+            pixel_values = " ".join(f"{pixel:.6f}" for pixel in flattened_image)
+            pixel_f.write(f"{pixel_values}\n")
 
 
 def main(argv):
