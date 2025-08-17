@@ -1,26 +1,29 @@
-# FHE-Benchmarks-ML-Inference
-Starter repository for benchmarking ML Inference workload.
+# FHE Benchmarking Suite - ML Inference
+This repository contains the harness for the ML-inference workload of the FHE benchmarking suite of [HomomorphicEncrypption.org].
+The harness currently supports mnist model benchmarking as specified in `harness/mnist` directory.
+The `main` branch contains a reference implementation of this workload, under the `submission` subdirectory.
 
-To run the workload
-Clone the repository
+Submitters need to clone this reposiroty, create a new branch with a name in the format `<submitter>-<date>`, replace the content of the `submission` subdirectory by their own implementation, and push the new branch to this repository.
+They also may need to changes or replace the script `scripts/build_task.sh` to account for dependencies and build environment for their submission.
+Submitters are expected to document any changes made to the model architecture `harness/mnist/mnist.py` in the `submission/README.md` file. 
+
+## Running the ML-inference workload
+The build environment depends on OpenFHE being installed as specificied in `scripts/get_openfhe.sh` and `submission/CMakeLists.txt`
+See https://github.com/openfheorg/openfhe-development#installation.
+
+To run the workload, clone and install dependencies:
 ```console
 git clone https://github.com/code-perspective/FHE-Benchmarks-ML-Inference.git
 cd FHE-Benchmarks-ML-Inference
-```
-Install python requirements
-```console
+
 python -m venv bmenv
 source ./bmenv/bin/activate
 pip install -r requirements.txt
+
+python3 harness/run_submission.py -h  # Information about command-line options
 ```
 
-Run the workload
-```console
-python3 harness/run_submission.py -h # Provide information about command-line options
-```
-
-The first time you run `harness/run_submission.py`, it will attempt to pull and build OpenFHE if it is not already installed, and will then build the submission itself. 
-On subsequent calls it will use the same project without re-building it unless the code has changed. An example run is provided below.
+The harness script `harness/run_submission.py` will attempt to build the submission itself, if it is not already built. If already built, it will use the same project without re-building it (unless the code has changed). An example run is provided below.
 
 
 ```console
@@ -105,27 +108,62 @@ $ python3 ./harness/run_submission.py 0 --seed 3 --num_runs 2
 All steps completed for the single inference!
 ```
 
+After finishing the run, deactivate the virtual environment.
+```console
+deactivate
+```
 
-Sample benchmark measurements
+## Directory structure
+
+The directory structure of this reposiroty is as follows:
 ```
-{
-  "total_latency_ms": 41.1349,
-  "per_stage": {
-    "Test dataset generation": "11.9646s",
-    "Test dataset preprocessing": "0.0029s",
-    "Key Generation": "3.0766s",
-    "(Encrypted) model preprocessing": "0.0049s",
-    "Input generation": "5.0768s",
-    "Input preprocessing": "0.0021s",
-    "Input encryption": "0.0339s",
-    "Encrypted ML Inference computation": "20.9319s",
-    "Result decryption": "0.0391s",
-    "Result postprocessing": "0.002s"
-  },
-  "bandwidth": {
-    "Public and evaluation keys": "1.4G",
-    "Encrypted input": "354.8K",
-    "Encrypted results": "65.6K"
-  }
-}
+├─ README.md     # This file
+├─ LICENSE.md    # Harness software license (Apache v2)
+├─ harness/      # Scripts to drive the workload implementation
+|   ├─ run_submission.py
+|   ├─ verify_result.py
+|   ├─ calculate_quality.py
+|   └─ [...]
+├─ datasets/     # The harness scripts create and populate this directory
+├─ docs/         # Optional: additional documentation
+├─ io/           # This directory is used for client<->server communication
+├─ measurements/ # Holds logs with performance numbers
+├─ scripts/      # Helper scripts for dependencies and build system
+└─ submission/   # This is where the workload implementation lives
+    ├─ README.md   # Submission documentation (mandatory)
+    ├─ LICENSE.md  # Optional software license (if different from Apache v2)
+    └─ [...]
 ```
+Submitters must overwrite the contents of the `scripts` and `submissions`
+subdirectories.
+
+## Description of stages
+
+A submitter can edit any of the `client_*` / `server_*` sources in `/submission`. 
+Moreover, for the particular parameters related to a workload, the submitter can modify the params files.
+If the current description of the files are inaccurate, the stage names in `run_submission` can be also 
+modified.
+
+The current stages are the following, targeted to a client-server scenario.
+The order in which they are happening in `run_submission` assumes an initialization step which is 
+database-dependent and run only once, and potentially multiple runs for multiple queries.
+Each file can take as argument the test case size.
+
+
+| Stage executables                | Description |
+|----------------------------------|-------------|
+| `client_key_generation`          | Generate all key material and cryptographic context at the client.           
+| `client_preprocess_dataset`      | (Optional) Any in the clear computations the client wants to apply over the dataset/model.
+| `client_preprocess_input`        | (Optional) Any in the clear computations the client wants to apply over the input.
+| `client_encode_encrypt_query`    | Plaintext encoding and encryption of the input at the client.
+| `server_preprocess_model`        | (Optional) Any in the clear or encrypted computations the server wants to apply over the model.
+| `server_encrypted_compute`       | The computation the server applies to achieve the workload solution over encrypted data.
+| `server_encrypted_compute`       | The computation the server applies on encypted data to measure encrypted model quality.
+| `client_decrypt_decode`          | Decryption and plaintext decoding of the result at the client.
+| `client_postprocess`             | Any in the clear computation that the client wants to apply on the decrypted result.
+
+
+The outer python script measures the runtime of each stage.
+The current stage separation structure requires reading and writing to files more times than minimally necessary.
+For a more granular runtime measuring, which would account for the extra overhead described above, we encourage
+submitters to separate and print in a log the individual times for reads/writes and computations inside each stage. 
