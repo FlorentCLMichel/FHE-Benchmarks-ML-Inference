@@ -1,26 +1,53 @@
-# FHE-Benchmarks-ML-Inference
-Starter repository for benchmarking ML Inference workload.
+# FHE Benchmarking Suite - ML Inference
+This repository contains the harness for the ML-inference workload of the FHE benchmarking suite of [HomomorphicEncrypption.org].
+The harness currently supports mnist model benchmarking as specified in `harness/mnist` directory.
+The `main` branch contains a reference implementation of this workload, under the `submission` subdirectory.
 
-To run the workload
-Clone the repository
+Submitters need to clone this reposiroty, create a new branch with a name in the format `<submitter>-<date>`, replace the content of the `submission` subdirectory by their own implementation, and push the new branch to this repository.
+They also may need to changes or replace the script `scripts/build_task.sh` to account for dependencies and build environment for their submission.
+Submitters are expected to document any changes made to the model architecture `harness/mnist/mnist.py` in the `submission/README.md` file. 
+
+## Directory structure
+
+The directory structure of this reposiroty is as follows:
+```
+├─ README.md     # This file
+├─ LICENSE.md    # Harness software license (Apache v2)
+├─ harness/      # Scripts to drive the workload implementation
+|   ├─ run_submission.py
+|   ├─ verify_result.py
+|   ├─ calculate_quality.py
+|   └─ [...]
+├─ datasets/     # The harness scripts create and populate this directory
+├─ docs/         # Optional: additional documentation
+├─ io/           # This directory is used for client<->server communication
+├─ measurements/ # Holds logs with performance numbers
+├─ scripts/      # Helper scripts for dependencies and build system
+└─ submission/   # This is where the workload implementation lives
+    ├─ README.md   # Submission documentation (mandatory)
+    ├─ LICENSE.md  # Optional software license (if different from Apache v2)
+    └─ [...]
+```
+Submitters must overwrite the contents of the `scripts` and `submissions`
+subdirectories.
+
+## Running the ML-inference workload
+The build environment depends on OpenFHE being installed as specificied in `scripts/get_openfhe.sh` and `submission/CMakeLists.txt`
+See https://github.com/openfheorg/openfhe-development#installation.
+
+To run the workload, clone and install dependencies:
 ```console
 git clone https://github.com/code-perspective/FHE-Benchmarks-ML-Inference.git
 cd FHE-Benchmarks-ML-Inference
-```
-Install python requirements
-```console
+
 python -m venv bmenv
 source ./bmenv/bin/activate
 pip install -r requirements.txt
+
+python3 harness/run_submission.py -h  # Information about command-line options
 ```
 
-Run the workload
-```console
-python3 harness/run_submission.py -h # Provide information about command-line options
-```
-
-The first time you run `harness/run_submission.py`, it will attempt to pull and build OpenFHE if it is not already installed, and will then build the submission itself. 
-On subsequent calls it will use the same project without re-building it unless the code has changed. An example run is provided below.
+The harness script `harness/run_submission.py` will attempt to build the submission itself, if it is not already built. If already built, it will use the same project without re-building it (unless the code has changed). An example run is provided below.
 
 
 ```console
