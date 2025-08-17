@@ -46,7 +46,7 @@ void read_eval_keys(const InstanceParams& prms, CryptoContextT cc) {
 }
 
 
-ConstCiphertext<DCRTPoly> encrypt_input(CryptoContext<DCRTPoly> cc, std::vector<float> input, PublicKey<DCRTPoly> pk) {
+ConstCiphertext<DCRTPoly> mlp_encrypt(CryptoContext<DCRTPoly> cc, std::vector<float> input, PublicKey<DCRTPoly> pk) {
   std::vector<double> v11340(std::begin(input), std::end(input));
   uint32_t v11340_filled_n = cc->GetCryptoParameters()->GetElementParams()->GetRingDimension() / 2;
   auto v11340_filled = v11340;

@@ -20,7 +20,7 @@ struct Sample {
   float image[NORMALIZED_DIM];
 };
 
-ConstCiphertext<DCRTPoly> encrypt_input(CryptoContext<DCRTPoly> cc, std::vector<float> input, PublicKey<DCRTPoly> pk);
+ConstCiphertext<DCRTPoly> mlp_encrypt(CryptoContext<DCRTPoly> cc, std::vector<float> input, PublicKey<DCRTPoly> pk);
 std::vector<float> mlp_decrypt(CryptoContextT v11343, CiphertextT v11344, PrivateKeyT v11345);
 PublicKey<DCRTPoly> read_public_key(const InstanceParams& prms);
 PrivateKey<DCRTPoly> read_secret_key(const InstanceParams& prms);

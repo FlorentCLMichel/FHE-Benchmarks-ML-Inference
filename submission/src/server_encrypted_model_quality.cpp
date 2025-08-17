@@ -37,8 +37,7 @@ int main(int argc, char* argv[]){
 
         std::vector<float> input_vector(input, input + NORMALIZED_DIM);
 
-        auto input_encrypted =
-            encrypt_input(cc, input_vector, pk);
+        auto input_encrypted = mlp_encrypt(cc, input_vector, pk);
         auto start = std::chrono::high_resolution_clock::now();
         auto output_encrypted = mlp(cc, input_encrypted);
         auto end = std::chrono::high_resolution_clock::now();
