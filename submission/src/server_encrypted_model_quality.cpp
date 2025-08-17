@@ -16,17 +16,6 @@ int main(int argc, char* argv[]){
     }
     auto size = static_cast<InstanceSize>(std::stoi(argv[1]));
     InstanceParams prms(size);
-
-    int batch_size = 10;
-    if (size == 0) {
-        batch_size = 10; // Run on 10 samples for SINGLE instance
-    } else if (size == 1) {
-        batch_size = 100; // Run on 100 samples for SMALL instance
-    } else if (size == 2) {
-        batch_size = 1000; // Run on 1000 samples for MEDIUM instance
-    } else {
-        batch_size = 10000; // Run on 10000 samples for LARGE instance
-    }
     
     CryptoContext<DCRTPoly> cc = read_crypto_context(prms);
     read_eval_keys(prms, cc);
@@ -37,14 +26,14 @@ int main(int argc, char* argv[]){
     std::cout << "         [server] Loading keys" << std::endl;
 
     std::vector<Sample> dataset;
-    std::string dataset_path = prms.datadir() / "dataset_pixels.txt";
+    std::string dataset_path = prms.dataintermdir() / "test_pixels.txt";
     load_dataset(dataset, dataset_path.c_str());
 
     fs::create_directories(prms.iodir());
-    std::ofstream out(prms.iodir() / "quality_result.txt");
-    for (int i = 0; i < batch_size; ++i) {
+    std::ofstream out(prms.iodir() / "result_labels.txt");
+    for (size_t i = 0; i < dataset.size(); ++i) {
         auto *input = dataset[i].image;
-        std::cout << "         [server] Processing input: " << i+1 << "/" << batch_size << std::endl;
+        std::cout << "         [server] Processing input: " << i+1 << "/" << dataset.size() << std::endl;
 
         std::vector<float> input_vector(input, input + NORMALIZED_DIM);
 

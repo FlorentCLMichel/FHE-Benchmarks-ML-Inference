@@ -20,7 +20,7 @@ _timestampsStr = {}
 # Global variable to store measured sizes
 _bandwidth = {}
 
-def parse_submission_arguments(workload: str) -> Tuple[int, InstanceParams, int, int, int]:
+def parse_submission_arguments(workload: str) -> Tuple[int, InstanceParams, int, int, int, bool]:
     """
     Get the arguments of the submission. Populate arguments as needed for the workload.
     """
@@ -42,7 +42,7 @@ def parse_submission_arguments(workload: str) -> Tuple[int, InstanceParams, int,
     seed = args.seed
     num_runs = args.num_runs
     clrtxt = args.clrtxt
-    run_quality_check = args.run_quality_check
+    run_quality_check = bool(args.run_quality_check)
 
     # Use params.py to get instance parameters
     params = InstanceParams(size)
@@ -131,3 +131,12 @@ def save_run(path: Path):
     }, open(path,"w"), indent=2)
 
     print("[total latency]", f"{round(sum(_timestamps.values()), 4)}s")
+
+def save_quality(path: Path, correct_predictions, total_samples, tag):
+    json.dump({
+        tag : {
+            "correct_predictions": correct_predictions,
+            "total_samples": total_samples,
+            "accuracy": correct_predictions / total_samples if total_samples > 0 else 0
+        }
+    }, open(path,"w"), indent=2)

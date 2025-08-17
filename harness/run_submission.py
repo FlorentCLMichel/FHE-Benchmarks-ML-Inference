@@ -23,8 +23,6 @@ def main():
     if size > utils.SINGLE and not quality_check:
         print(f"Currently only single inference is supported for measuring latency.")
         sys.exit(1)
-    if size < utils.LARGE and quality_check:
-        print(f"Use LARGE to measure quality across the entire dataset")
     test = instance_name(size)
     print(f"\n[harness] Running submission for {test} inference")
 
@@ -64,76 +62,91 @@ def main():
     subprocess.run(exec_dir/"server_preprocess_model", check=True)
     utils.log_step(3, "Server: (Encrypted) model preprocessing")
 
+    # Run steps 4-10 multiple times if requested
+    for run in range(num_runs):
+        if num_runs > 1:
+            print(f"\n         [harness] Run {run+1} of {num_runs}")
+
+        # 4. Client-side: Generate a new random input using harness/generate_input.py
+        cmd = ["python3", harness_dir/"generate_input.py", str(size)]
+        if seed is not None:
+            # Use a different seed for each run but derived from the base seed
+            rng = np.random.default_rng(seed)
+            genqry_seed = rng.integers(0,0x7fffffff)
+            cmd.extend(["--seed", str(genqry_seed)])
+        subprocess.run(cmd, check=True)
+        utils.log_step(4, "Harness: Input generation for Single Encrypted Inference")
+
+        # 5. Client-side: Preprocess input using exec_dir/client_preprocess_input
+        subprocess.run([exec_dir/"client_preprocess_input", str(size)], check=True)
+        utils.log_step(5, "Client: Input preprocessing")
+
+        # 6. Client-side: Encrypt the input
+        subprocess.run([exec_dir/"client_encode_encrypt_input", str(size)], check=True)
+        utils.log_step(6, "Client: Input encryption")
+        utils.log_size(io_dir / "ciphertexts_upload", "Client: Encrypted input")
+
+        # 7. Server side: Run the encrypted processing run exec_dir/server_encrypted_compute
+        subprocess.run([exec_dir/"server_encrypted_compute", str(size)], check=True)
+        utils.log_step(7, "Server: Encrypted ML Inference computation")
+        # Report size of encrypted results
+        utils.log_size(io_dir / "ciphertexts_download", "Client: Encrypted results")
+
+        # 8. Client-side: decrypt
+        subprocess.run([exec_dir/"client_decrypt_decode", str(size)], check=True)
+        utils.log_step(8, "Client: Result decryption")
+
+        # 9. Client-side: post-process
+        subprocess.run([exec_dir/"client_postprocess", str(size)], check=True)
+        utils.log_step(9, "Client: Result postprocessing")
+
+        # 10.1 Run the cleartext computation in cleartext_impl.py
+        # If the cleartext computation takes too long, compute it once for a given state and skip this step.
+        # One can store the results for multiple runs; currently, storing expected.txt works only with num_runs = 1.
+        if clrtxt is None:
+            subprocess.run(["python3", harness_dir/"cleartext_impl.py", str(size)], check=True)
+            print("         [harness] Wrote expected result to: ", params.dataset_intermediate_dir() / "expected.txt")
+
+        # 10.2 Verify the result
+        expected_file = params.dataset_intermediate_dir() / "expected.txt"
+        result_file = io_dir / "result.txt"
+
+        if not result_file.exists():
+            print(f"Error: Result file {result_file} not found")
+            sys.exit(1)
+
+        subprocess.run(["python3", harness_dir/"verify_result.py",
+            str(expected_file), str(result_file)], check=False)
+
+        # 11. Store measurements
+        run_path = params.measuredir() / f"results-{run+1}.json"
+        run_path.parent.mkdir(parents=True, exist_ok=True)
+        utils.save_run(run_path)
+
+    
     if quality_check:
-        # 4. Run the quality check for encrypted inference.
+        print("------------------------------------------------------------------")
+        print("         [harness] Running quality check for encrypted inference.")
+        # 12.1. Client-side: Generate a new random input using harness/generate_input.py
+        cmd = ["python3", harness_dir/"generate_input.py", str(size)]
+        if seed is not None:
+            # Use a different seed for each run but derived from the base seed
+            rng = np.random.default_rng(seed)
+            genqry_seed = rng.integers(0,0x7fffffff)
+            cmd.extend(["--seed", str(genqry_seed)])
+        if quality_check:
+            cmd.extend(["--run_quality_check", "True"])
+        subprocess.run(cmd, check=True)
+        utils.log_step(12.1, "Harness: Input generation for Encrypted Model Quality")
+
+        # 12.2. Run the quality check for encrypted inference.
         cmd = [exec_dir/"server_encrypted_model_quality", str(size)]
         subprocess.run(cmd, check=True)
-        utils.log_step(4, "Server: Encrypted inference model quality check")
+        utils.log_step(12.2, "Server: Encrypted inference model quality check")
 
-        # 5. Calculate and save accuracy.
+        # 12.3. Calculate and save accuracy.
         subprocess.run(["python3", harness_dir/"calculate_quality.py",
             str(size)], check=True)
-    else:
-        # Run steps 4-10 multiple times if requested
-        for run in range(num_runs):
-            if num_runs > 1:
-                print(f"\n         [harness] Run {run+1} of {num_runs}")
-
-            # 4. Client-side: Generate a new random input using harness/generate_input.py
-            cmd = ["python3", harness_dir/"generate_input.py", str(size)]
-            if seed is not None:
-                # Use a different seed for each run but derived from the base seed
-                rng = np.random.default_rng(seed)
-                genqry_seed = rng.integers(0,0x7fffffff)
-                cmd.extend(["--seed", str(genqry_seed)])
-            subprocess.run(cmd, check=True)
-            utils.log_step(4, "Harness: Input generation")
-
-            # 5. Client-side: Preprocess input using exec_dir/client_preprocess_input
-            subprocess.run([exec_dir/"client_preprocess_input", str(size)], check=True)
-            utils.log_step(5, "Client: Input preprocessing")
-
-            # 6. Client-side: Encrypt the input
-            subprocess.run([exec_dir/"client_encode_encrypt_input", str(size)], check=True)
-            utils.log_step(6, "Client: Input encryption")
-            utils.log_size(io_dir / "ciphertexts_upload", "Client: Encrypted input")
-
-            # 7. Server side: Run the encrypted processing run exec_dir/server_encrypted_compute
-            subprocess.run([exec_dir/"server_encrypted_compute", str(size)], check=True)
-            utils.log_step(7, "Server: Encrypted ML Inference computation")
-            # Report size of encrypted results
-            utils.log_size(io_dir / "ciphertexts_download", "Client: Encrypted results")
-
-            # 8. Client-side: decrypt
-            subprocess.run([exec_dir/"client_decrypt_decode", str(size)], check=True)
-            utils.log_step(8, "Client: Result decryption")
-
-            # 9. Client-side: post-process
-            subprocess.run([exec_dir/"client_postprocess", str(size)], check=True)
-            utils.log_step(9, "Client: Result postprocessing")
-
-            # 10.1 Run the cleartext computation in cleartext_impl.py
-            # If the cleartext computation takes too long, compute it once for a given state and skip this step.
-            # One can store the results for multiple runs; currently, storing expected.txt works only with num_runs = 1.
-            if clrtxt is None:
-                subprocess.run(["python3", harness_dir/"cleartext_impl.py", str(size)], check=True)
-                print("         [harness] Wrote expected result to: ", params.dataset_intermediate_dir() / "expected.txt")
-
-            # 10.2 Verify the result
-            expected_file = params.dataset_intermediate_dir() / "expected.txt"
-            result_file = io_dir / "result.txt"
-
-            if not result_file.exists():
-                print(f"Error: Result file {result_file} not found")
-                sys.exit(1)
-
-            subprocess.run(["python3", harness_dir/"verify_result.py",
-                str(expected_file), str(result_file)], check=False)
-
-            # 11. Store measurements
-            run_path = params.measuredir() / f"results-{run+1}.json"
-            run_path.parent.mkdir(parents=True, exist_ok=True)
-            utils.save_run(run_path)
 
     print(f"\nAll steps completed for the {instance_name(size)} inference!")
 

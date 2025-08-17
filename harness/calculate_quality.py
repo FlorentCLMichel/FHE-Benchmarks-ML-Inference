@@ -17,18 +17,8 @@ def main():
     """
     __, params, __, __, __, __ = parse_submission_arguments('Generate query for FHE benchmark.')
 
-    expected_file = params.datadir() / "dataset_labels.txt"
-    result_file   = params.iodir() / "quality_result.txt"
-    
-    num_samples   = 10 
-    if params.size == utils.SINGLE:
-        num_samples = 10
-    elif params.size == utils.SMALL:
-        num_samples = 100
-    elif params.size == utils.MEDIUM:
-        num_samples = 1000
-    elif params.size == utils.LARGE:
-        num_samples = 10000
+    expected_file = params.dataset_intermediate_dir() / "test_labels.txt"
+    result_file   = params.iodir() / "result_labels.txt"
 
     try:
         # Read expected labels (one per line)
@@ -43,27 +33,18 @@ def main():
         print(f"[harness] failed to read files: {e}")
         sys.exit(1)
 
-    # Check if we have enough labels in both files
-    if len(expected_labels) < num_samples:
-        print(f"[harness] FAIL - Not enough expected labels: have {len(expected_labels)}, need {num_samples}")
-        sys.exit(1)
-    
-    if len(result_labels) < num_samples:
-        print(f"[harness] FAIL - Not enough result labels: have {len(result_labels)}, need {num_samples}")
-        sys.exit(1)
+    num_samples = len(expected_labels)
 
-    # Calculate accuracy for the first num_samples only
-    expected_subset = expected_labels[:num_samples]
-    result_subset = result_labels[:num_samples]
-    
-    correct_predictions = sum(1 for exp, res in zip(expected_subset, result_subset) if exp == res)
-    accuracy = correct_predictions / num_samples 
+    correct_predictions = sum(1 for exp, res in zip(expected_labels, result_labels) if exp == res)
+    accuracy = correct_predictions / num_samples
 
     print(f"[harness] Accuracy: {accuracy:.4f} ({correct_predictions}/{num_samples} correct)")
 
-    OUT_PATH = params.measuredir() / f"quality.txt"
+    quality_json = {"accuracy": accuracy, "correct": correct_predictions, "total": num_samples}
+
+    OUT_PATH = params.measuredir() / f"encrypted_model_quality.json"
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(f"{accuracy:.4f}\n({correct_predictions}/{num_samples} correct)\n", encoding="utf-8")
+    utils.save_quality(OUT_PATH, correct_predictions, num_samples, "encrypted model quality")
 
 
 if __name__ == "__main__":
