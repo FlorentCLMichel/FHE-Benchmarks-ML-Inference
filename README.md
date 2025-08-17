@@ -50,60 +50,61 @@ options:
 $ python3 ./harness/run_submission.py 0 --seed 3 --num_runs 2
  
 [harness] Running submission for single inference
-[get-openfhe] Found OpenFHE installed at /usr/local/lib/ (use --force to rebuild).
+[get-openfhe] Found OpenFHE at /usr/local/google/home/gshruthi/projects/FHE-Benchmarks-ML-Inference/third_party/openfhe (use --force to rebuild).
 -- FOUND PACKAGE OpenFHE
 -- OpenFHE Version: 1.3.1
 -- OpenFHE installed as shared libraries: ON
--- OpenFHE include files location: /usr/local/include/openfhe
--- OpenFHE lib files location: /usr/local/lib
+-- OpenFHE include files location: /usr/local/google/home/gshruthi/projects/FHE-Benchmarks-ML-Inference/third_party/openfhe/include/openfhe
+-- OpenFHE lib files location: /usr/local/google/home/gshruthi/projects/FHE-Benchmarks-ML-Inference/third_party/openfhe/lib
 -- OpenFHE Native Backend size: 64
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /usr/local/google/home/gshruthi/projects/FHE-Benchmarks-ML-Inference/submission/build
-[ 40%] Built target server_preprocess_model
-[ 40%] Built target client_postprocess
-[ 40%] Built target client_preprocess_input
-[ 66%] Built target client_decrypt_decode
+[ 27%] Built target server_preprocess_model
+[ 27%] Built target client_preprocess_input
+[ 33%] Built target client_postprocess
+[ 44%] Built target mlp_encryption_utils
+[ 55%] Built target client_key_generation
 [ 66%] Built target client_encode_encrypt_input
-[ 80%] Built target client_key_generation
-[100%] Built target server_encrypted_compute
-00:44:42 [harness] 1: Test dataset generation completed (elapsed: 11.9646s)
-00:44:42 [harness] 2: Test dataset preprocessing completed (elapsed: 0.0029s)
-00:44:45 [harness] 3: Key Generation completed (elapsed: 3.0766s)
-         [harness] Public and evaluation keys size: 1.4G
-00:44:45 [harness] 4: (Encrypted) model preprocessing completed (elapsed: 0.0049s)
+[ 77%] Built target server_encrypted_compute
+[ 88%] Built target client_decrypt_decode
+[100%] Built target server_encrypted_model_quality
+17:44:41 [harness] 1: Harness: MNIST Test dataset generation completed (elapsed: 7.3106s)
+17:44:44 [harness] 2: Client: Key Generation completed (elapsed: 2.7355s)
+         [harness] Client: Public and evaluation keys size: 1.4G
+17:44:44 [harness] 3: Server: (Encrypted) model preprocessing completed (elapsed: 0.008s)
 
          [harness] Run 1 of 2
-00:44:50 [harness] 5: Input generation completed (elapsed: 5.0768s)
-00:44:50 [harness] 6: Input preprocessing completed (elapsed: 0.0021s)
-00:44:50 [harness] 7: Input encryption completed (elapsed: 0.0339s)
-         [harness] Encrypted input size: 354.8K
+17:44:48 [harness] 4: Harness: Input generation for Single Encrypted Inference completed (elapsed: 3.7404s)
+17:44:48 [harness] 5: Client: Input preprocessing completed (elapsed: 0.0061s)
+17:44:48 [harness] 6: Client: Input encryption completed (elapsed: 0.0179s)
+         [harness] Client: Encrypted input size: 354.8K
          [server] Loading keys
          [server] run encrypted MNIST inference
-         [server] Execution time: 18 seconds
-00:45:11 [harness] 8: Encrypted ML Inference computation completed (elapsed: 20.9319s)
-         [harness] Encrypted results size: 65.6K
-00:45:11 [harness] 9: Result decryption completed (elapsed: 0.0391s)
-00:45:11 [harness] 10: Result postprocessing completed (elapsed: 0.002s)
+         [server] Execution time: 12 seconds
+17:45:03 [harness] 7: Server: Encrypted ML Inference computation completed (elapsed: 14.9282s)
+         [harness] Client: Encrypted results size: 65.6K
+17:45:03 [harness] 8: Client: Result decryption completed (elapsed: 0.0199s)
+17:45:03 [harness] 9: Client: Result postprocessing completed (elapsed: 0.0052s)
          [harness] Wrote expected result to:  /usr/local/google/home/gshruthi/projects/FHE-Benchmarks-ML-Inference/datasets/single/intermediate/expected.txt
-[harness] PASS  (expected=2, got=2)
-[total latency] 41.1349s
+[harness] PASS  (expected=7, got=7)
+[total latency] 28.7717s
 
          [harness] Run 2 of 2
-00:45:16 [harness] 5: Input generation completed (elapsed: 5.2668s)
-00:45:16 [harness] 6: Input preprocessing completed (elapsed: 0.0023s)
-00:45:16 [harness] 7: Input encryption completed (elapsed: 0.0359s)
-         [harness] Encrypted input size: 354.8K
+17:45:06 [harness] 4: Harness: Input generation for Single Encrypted Inference completed (elapsed: 3.3445s)
+17:45:06 [harness] 5: Client: Input preprocessing completed (elapsed: 0.0056s)
+17:45:06 [harness] 6: Client: Input encryption completed (elapsed: 0.0177s)
+         [harness] Client: Encrypted input size: 354.8K
          [server] Loading keys
          [server] run encrypted MNIST inference
-         [server] Execution time: 18 seconds
-00:45:37 [harness] 8: Encrypted ML Inference computation completed (elapsed: 21.2919s)
-         [harness] Encrypted results size: 65.6K
-00:45:37 [harness] 9: Result decryption completed (elapsed: 0.038s)
-00:45:37 [harness] 10: Result postprocessing completed (elapsed: 0.002s)
+         [server] Execution time: 12 seconds
+17:45:20 [harness] 7: Server: Encrypted ML Inference computation completed (elapsed: 14.1896s)
+         [harness] Client: Encrypted results size: 65.6K
+17:45:20 [harness] 8: Client: Result decryption completed (elapsed: 0.0196s)
+17:45:20 [harness] 9: Client: Result postprocessing completed (elapsed: 0.0052s)
          [harness] Wrote expected result to:  /usr/local/google/home/gshruthi/projects/FHE-Benchmarks-ML-Inference/datasets/single/intermediate/expected.txt
-[harness] PASS  (expected=2, got=2)
-[total latency] 41.6859s
+[harness] PASS  (expected=7, got=7)
+[total latency] 27.6363s
 
 All steps completed for the single inference!
 ```
