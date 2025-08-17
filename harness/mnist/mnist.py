@@ -4,7 +4,11 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split
 import os
+import sys
 from absl import app, flags
+
+# Add the current directory to the Python path
+sys.path.insert(0, os.path.dirname(__file__))
 
 import model as simple_ffn
 import train
@@ -81,10 +85,9 @@ def load_and_preprocess_data(batch_size=BATCH_SIZE, data_dir='./harness/mnist/da
 
 # 3. Model Definition: See model.py
 
-
 # 4. Training Function: See train.py
 
-# 5. Testing Function
+# 5. Testing Function: See test.py
 
 
 # Function to export test data to separate files.
