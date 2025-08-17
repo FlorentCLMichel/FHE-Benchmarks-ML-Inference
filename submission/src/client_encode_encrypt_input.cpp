@@ -29,7 +29,7 @@ int main(int argc, char* argv[]){
     auto *input = dataset[0].image;
     std::vector<float> input_vector(input, input + NORMALIZED_DIM);
 
-    auto ctxt = encrypt_input(cc, input_vector, pk);
+    auto ctxt = mlp_encrypt(cc, input_vector, pk);
     fs::create_directories(prms.ctxtupdir());
     Serial::SerializeToFile(prms.ctxtupdir()/"cipher_input.bin", ctxt, SerType::BINARY);
 
