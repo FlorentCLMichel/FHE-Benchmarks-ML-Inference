@@ -2,23 +2,28 @@
 """
 Cleartext reference for the “ML Inference” workload.
 For each test case:
-    - Reads the plain_input.bin file from the dataset intermediate directory
-    - Writes the result to expected_XXX.txt for each test case (# datasets/expected.txt)
+    - Reads the input pixels from the dataset intermediate directory
+    - Writes the predicted labels to output_labels path.
 """
 
+import sys
 from pathlib import Path
 from utils import parse_submission_arguments
+from mnist import mnist
 
 def main():
-    __, params, __, __, __, __ = parse_submission_arguments('Generate dataset for FHE benchmark.')
-    INPUT_PATH = params.dataset_intermediate_dir() / f"plain_output.bin"
-    
-    # Get reference result by reading from INPUT_PATH
-    result = INPUT_PATH.read_text(encoding="utf-8").strip()
+    """
+    Usage:  python3 cleartext_impl.py  <input_pixels_path>  <output_labels_path>
+    """
 
-    # Write to expected.txt (overwrites if it already exists)
-    OUT_PATH = params.dataset_intermediate_dir() / f"expected.txt"
-    OUT_PATH.write_text(f"{result}\n", encoding="utf-8")
+    if len(sys.argv) != 3:
+        sys.exit("Usage: cleartext_impl.py <input_pixels_path> <output_labels_path>")
+
+    INPUT_PATH = Path(sys.argv[1])
+    OUTPUT_PATH = Path(sys.argv[2])
+    model_path = "harness/mnist/mnist_ffnn_model.pth"
+
+    mnist.run_predict(model_path=model_path, pixels_file=INPUT_PATH, predictions_file=OUTPUT_PATH)
 
 if __name__ == "__main__":
     main()

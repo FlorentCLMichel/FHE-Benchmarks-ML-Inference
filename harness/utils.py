@@ -19,6 +19,8 @@ _timestamps = {}
 _timestampsStr = {}
 # Global variable to store measured sizes
 _bandwidth = {}
+# Global variable to store model quality metrics
+_model_quality = {}
 
 def parse_submission_arguments(workload: str) -> Tuple[int, InstanceParams, int, int, int, bool]:
     """
@@ -132,11 +134,14 @@ def save_run(path: Path):
 
     print("[total latency]", f"{round(sum(_timestamps.values()), 4)}s")
 
-def save_quality(path: Path, correct_predictions, total_samples, tag):
-    json.dump({
-        tag : {
-            "correct_predictions": correct_predictions,
-            "total_samples": total_samples,
-            "accuracy": correct_predictions / total_samples if total_samples > 0 else 0
-        }
-    }, open(path,"w"), indent=2)
+def log_quality(correct_predictions, total_samples, tag):
+    global _model_quality
+    _model_quality[tag] = {
+        "correct_predictions": correct_predictions,
+        "total_samples": total_samples,
+        "accuracy": correct_predictions / total_samples if total_samples > 0 else 0
+    }
+
+def save_quality(path: Path):
+    global _model_quality
+    json.dump({"mnist_model_quality" : _model_quality}, open(path,"w"), indent=2)
