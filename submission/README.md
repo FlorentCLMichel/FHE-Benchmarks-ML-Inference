@@ -1,5 +1,5 @@
 # Submission for ML Inference
-The submission is built with HEIR compiler.
+The submission is built with [HEIR](heir.dev) compiler.
 
 ## Model architecture changes
 We assume that server has access to training data and the model architecture has been modified as follows
@@ -16,4 +16,4 @@ HEIR compiler is used to compile the encrypted function with the following optim
 - approximate sign and approximate relu as specified in the `submission/mlp.mlir` file.
 - Weights have been inlined.
 
-See further details of compilation (here)[https://github.com/google/heir/issues/1232]
+See further details of compilation https://github.com/google/heir/issues/1232
