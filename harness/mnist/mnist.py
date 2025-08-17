@@ -6,13 +6,17 @@ from torch.utils.data import DataLoader, random_split
 import os
 from absl import app, flags
 
+import model as simple_ffn
+import train
+import test
+
 FLAGS = flags.FLAGS
 
 # 1. Configuration
 BATCH_SIZE = 64
 LEARNING_RATE = 0.001
 EPOCHS = 15 # Increased epochs for potentially better accuracy
-MODEL_PATH = 'mnist_ffnn_model.pth'
+MODEL_PATH = './harness/mnist/mnist_ffnn_model.pth'
 RNG_SEED = 42 # for reproducibility
 
 # Define command line flags
@@ -20,7 +24,7 @@ flags.DEFINE_string('model_path', MODEL_PATH, 'Path to save/load the model')
 flags.DEFINE_integer('batch_size', BATCH_SIZE, 'Batch size for training and evaluation')
 flags.DEFINE_float('learning_rate', LEARNING_RATE, 'Learning rate for optimizer')
 flags.DEFINE_integer('epochs', EPOCHS, 'Number of training epochs')
-flags.DEFINE_string('data_dir', './data', 'Directory to store/load MNIST dataset')
+flags.DEFINE_string('data_dir', './harness/mnist/data', 'Directory to store/load MNIST dataset')
 flags.DEFINE_boolean('no_cuda', False, 'Disable CUDA even if available')
 flags.DEFINE_integer('seed', RNG_SEED, 'Random seed for reproducibility')
 
@@ -46,7 +50,7 @@ def get_mnist_transform():
         transforms.Normalize((0.1307,), (0.3081,)) # Normalize with MNIST dataset's mean and std
     ])
 
-def load_and_preprocess_data(batch_size=BATCH_SIZE, data_dir='./data'):
+def load_and_preprocess_data(batch_size=BATCH_SIZE, data_dir='./harness/mnist/data'):
     """
     Load and preprocess MNIST dataset.
     
@@ -75,89 +79,13 @@ def load_and_preprocess_data(batch_size=BATCH_SIZE, data_dir='./data'):
     return train_loader, val_loader, test_loader
     
 
-# 3. Model Definition
-class SimpleFFNN(nn.Module):
-    def __init__(self):
-        super(SimpleFFNN, self).__init__()
-        # MNIST images are 28x28 = 784 pixels
-        self.fc1 = nn.Linear(28 * 28, 128) # First hidden layer
-        self.relu = nn.ReLU()             # Activation function
-        self.fc2 = nn.Linear(128, 64)     # Second hidden layer
-        self.fc3 = nn.Linear(64, 10)      # Output layer (10 classes for digits 0-9)
+# 3. Model Definition: See model.py
 
-    def forward(self, x):
-        x = x.view(-1, 28 * 28) # Flatten the 28x28 image into a 784-dimensional vector
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.fc2(x)
-        x = self.relu(x)
-        x = self.fc3(x)
-        return x # No softmax here, as CrossEntropyLoss will apply it internally
 
-# 4. Training Function
-def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, model_path):
-    best_accuracy = 0.0
-    for epoch in range(epochs):
-        model.train() # Set model to training mode
-        running_loss = 0.0
-        correct_train = 0
-        total_train = 0
-        for batch_idx, (data, target) in enumerate(train_loader):
-            data, target = data.to(device), target.to(device)
-
-            optimizer.zero_grad() # Zero the gradients
-            output = model(data)  # Forward pass
-            loss = criterion(output, target) # Calculate loss
-            loss.backward()       # Backward pass
-            optimizer.step()      # Update weights
-
-            running_loss += loss.item()
-            _, predicted = torch.max(output.data, 1)
-            total_train += target.size(0)
-            correct_train += (predicted == target).sum().item()
-
-        train_accuracy = 100 * correct_train / total_train
-        print(f'Epoch {epoch+1}/{epochs}, Loss: {running_loss/len(train_loader):.4f}, Train Accuracy: {train_accuracy:.2f}%')
-
-        # Validation phase
-        model.eval() # Set model to evaluation mode
-        correct_val = 0
-        total_val = 0
-        val_loss = 0.0
-        with torch.no_grad(): # Disable gradient calculation during validation
-            for data, target in val_loader:
-                data, target = data.to(device), target.to(device)
-                output = model(data)
-                val_loss += criterion(output, target).item()
-                _, predicted = torch.max(output.data, 1)
-                total_val += target.size(0)
-                correct_val += (predicted == target).sum().item()
-
-        val_accuracy = 100 * correct_val / total_val
-        val_loss /= len(val_loader)
-        print(f'Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.2f}%')
-
-        # Save the model if it's the best so far
-        if val_accuracy > best_accuracy:
-            best_accuracy = val_accuracy
-            torch.save(model.state_dict(), model_path)
-            print(f'Model saved to {model_path} with validation accuracy: {best_accuracy:.2f}%')
+# 4. Training Function: See train.py
 
 # 5. Testing Function
-def test_model(model, test_loader, device):
-    model.eval() # Set model to evaluation mode
-    correct = 0
-    total = 0
-    with torch.no_grad(): # Disable gradient calculation
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-            _, predicted = torch.max(output.data, 1)
-            total += target.size(0)
-            correct += (predicted == target).sum().item()
-    accuracy = 100 * correct / total
-    print(f'Accuracy on test data: {accuracy:.2f}%')
-    return accuracy
+
 
 # Function to export test data to separate files.
 def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_samples=-1):
@@ -215,9 +143,9 @@ def main(argv):
     data_dir = FLAGS.data_dir
     use_cuda = not FLAGS.no_cuda and torch.cuda.is_available()
     random_seed = FLAGS.seed
-    
     # Set random seed for reproducibility
     torch.manual_seed(random_seed)
+
     if use_cuda:
         torch.cuda.manual_seed_all(random_seed)
     
@@ -235,7 +163,7 @@ def main(argv):
     print(f"Epochs: {epochs}")
     print(f"Random seed: {random_seed}")
 
-    model = SimpleFFNN().to(device)
+    model = simple_ffn.SimpleFFNN().to(device)
     criterion = nn.CrossEntropyLoss() # Suitable for classification tasks
     optimizer = optim.Adam(model.parameters(), lr=learning_rate) # Adam optimizer
 
@@ -245,12 +173,12 @@ def main(argv):
         model.load_state_dict(torch.load(model_path, map_location=device))
     else:
         print(f"\nModel '{model_path}' not found. Starting training...")
-        train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, model_path)
+        train.train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, model_path)
         print("Training finished.")
 
     # Testing the model
     print(f"\nEvaluating model on test data...")
-    test_accuracy = test_model(model, test_loader, device)
+    test_accuracy = test.test_model(model, test_loader, device)
 
 
 if __name__ == '__main__':
