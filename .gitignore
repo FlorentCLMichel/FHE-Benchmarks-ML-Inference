@@ -1,5 +1,5 @@
 # Temporary files for loading MNIST data and model training
-harness/mnist/data
+harness/mnist/data/*
 harness/mnist/mnist_ffnn_model.pth
 
 #  Python virtual environment
