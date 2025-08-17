@@ -91,43 +91,83 @@ def load_and_preprocess_data(batch_size=BATCH_SIZE, data_dir='./harness/mnist/da
 
 
 # Function to export test data to separate files.
-def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_samples=-1):
+def export_test_pixels_labels(data_dir='./data', pixels_file="mnist_pixels.txt", labels_file="mnist_labels.txt", num_samples=-1, seed=None):
     """
-    Export MNIST test dataset to separate label and pixel files.
+    Export MNIST test dataset to separate label and pixel files using random sampling.
+    
+    Args:
+        data_dir (str): Directory to download dataset temporarily.
+        pixels_file (str): Path to the output file for pixel values
+        labels_file (str): Path to the output file for labels
+        num_samples (int): Number of samples to export (-1 for all)
+    """
+    if seed is not None:
+        torch.manual_seed(seed)
+
+    # Get the total number of samples in the test dataset
+    transform = transforms.Compose([
+        transforms.ToTensor(), # Converts PIL Image or numpy.ndarray to FloatTensor and scales to [0.0, 1.0]
+    ])
+    test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transform)
+    total_samples = len(test_dataset)
+
+    # Determine how many samples to export
+    samples_to_export = total_samples if num_samples == -1 else min(num_samples, total_samples)
+    
+    
+    # Use sample_test_data to get random samples (but without normalization for export)
+    if samples_to_export == total_samples:
+        
+        with open(labels_file, 'w') as label_f, open(pixels_file, 'w') as pixel_f:
+            for image, label in test_dataset:
+                # Flatten the image to 784 dimensions (28x28)
+                flattened_image = image.view(-1).numpy()
+                
+                # Write label to labels file
+                label_f.write(f"{label}\n")
+                
+                # Write pixel values to pixels file
+                pixel_values = " ".join(f"{pixel:.6f}" for pixel in flattened_image)
+                pixel_f.write(f"{pixel_values}\n")
+    else:
+        
+        # Generate random indices
+        random_indices = torch.randperm(total_samples)[:samples_to_export]
+        
+        # Create a subset dataset using the random indices
+        subset_dataset = torch.utils.data.Subset(test_dataset, random_indices)
+        
+        # Create DataLoader for the subset
+        subset_loader = DataLoader(subset_dataset, batch_size=1, shuffle=False)
+        
+        with open(labels_file, 'w') as label_f, open(pixels_file, 'w') as pixel_f:
+            for batch_images, batch_labels in subset_loader:
+                for image, label in zip(batch_images, batch_labels):
+                    # Flatten the image to 784 dimensions (28x28)
+                    flattened_image = image.view(-1).numpy()
+                    
+                    # Write label to labels file
+                    label_f.write(f"{label.item()}\n")
+                    
+                    # Write pixel values to pixels file
+                    pixel_values = " ".join(f"{pixel:.6f}" for pixel in flattened_image)
+                    pixel_f.write(f"{pixel_values}\n")
+
+
+def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_samples=-1, seed=None):
+    """
+    Export MNIST test dataset to separate label and pixel files using random sampling.
     
     Args:
         data_dir (str): Directory to load dataset from
         output_file (str): Base output file path (will create .labels and .pixels files)
         num_samples (int): Number of samples to export (-1 for all)
     """
-    transform = transforms.Compose([
-        transforms.ToTensor(), # Converts PIL Image or numpy.ndarray to FloatTensor and scales to [0.0, 1.0]
-    ])
-    test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transform)
-    
-    # Determine how many samples to export
-    total_samples = len(test_dataset)
-    samples_to_export = total_samples if num_samples == -1 else min(num_samples, total_samples)
-    
     # Create separate file names for labels and pixels
     base_name = str(output_file).rsplit('.', 1)[0] if '.' in str(output_file) else str(output_file)
     labels_file = f"{base_name}_labels.txt"
     pixels_file = f"{base_name}_pixels.txt"
-    
-    with open(labels_file, 'w') as label_f, open(pixels_file, 'w') as pixel_f:
-        for i, (image, label) in enumerate(test_dataset):
-            if i >= samples_to_export:
-                break
-                
-            # Flatten the image to 784 dimensions (28x28)
-            flattened_image = image.view(-1).numpy()
-            
-            # Write label to labels file
-            label_f.write(f"{label}\n")
-            
-            # Write pixel values to pixels file
-            pixel_values = " ".join(f"{pixel:.6f}" for pixel in flattened_image)
-            pixel_f.write(f"{pixel_values}\n")
+    export_test_pixels_labels(data_dir=data_dir, pixels_file=pixels_file, labels_file=labels_file, num_samples=num_samples, seed=seed)
 
 
 def main(argv):
