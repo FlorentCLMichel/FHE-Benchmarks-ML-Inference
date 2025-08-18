@@ -42,12 +42,12 @@ def main():
     correct_encrypted_predictions = sum(1 for exp, res in zip(expected_labels, result_labels) if exp == res)
     encrypted_model_accuracy = correct_encrypted_predictions / num_samples
     print(f"[harness] Encrypted Model Accuracy: {encrypted_model_accuracy:.4f} ({correct_encrypted_predictions}/{num_samples} correct)")
-    utils.log_quality(correct_encrypted_predictions, num_samples, "encrypted model quality")
+    utils.log_quality(correct_encrypted_predictions, num_samples, "Encrypted model quality")
 
     correct_ref_model_predictions = sum(1 for exp, res in zip(expected_labels, reference_model_preds) if exp == res)
     reference_model_accuracy = correct_ref_model_predictions / num_samples
     print(f"[harness] Reference Model Accuracy: {reference_model_accuracy:.4f} ({correct_ref_model_predictions}/{num_samples} correct)")
-    utils.log_quality(correct_ref_model_predictions, num_samples, "reference model quality")
+    utils.log_quality(correct_ref_model_predictions, num_samples, "Harness plaintext model quality")
 
     OUT_PATH = params.measuredir() / f"encrypted_model_quality.json"
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
