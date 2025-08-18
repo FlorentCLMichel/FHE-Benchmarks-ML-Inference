@@ -3,7 +3,7 @@ This repository contains the harness for the ML-inference workload of the FHE be
 The harness currently supports mnist model benchmarking as specified in `harness/mnist` directory.
 The `main` branch contains a reference implementation of this workload, under the `submission` subdirectory.
 
-Submitters need to clone this reposiroty, create a new branch with a name in the format `<submitter>-<date>`, replace the content of the `submission` subdirectory by their own implementation, and push the new branch to this repository.
+Submitters need to clone this reposiroty, replace the content of the `submission` subdirectory by their own implementation.
 They also may need to changes or replace the script `scripts/build_task.sh` to account for dependencies and build environment for their submission.
 Submitters are expected to document any changes made to the model architecture `harness/mnist/mnist.py` in the `submission/README.md` file. 
 
@@ -159,7 +159,7 @@ Each file can take as argument the test case size.
 | `client_encode_encrypt_query`    | Plaintext encoding and encryption of the input at the client.
 | `server_preprocess_model`        | (Optional) Any in the clear or encrypted computations the server wants to apply over the model.
 | `server_encrypted_compute`       | The computation the server applies to achieve the workload solution over encrypted data.
-| `server_encrypted_compute`       | The computation the server applies on encypted data to measure encrypted model quality.
+| `server_encrypted_model_quality`       | The computation the server applies on encypted data to measure encrypted model quality.
 | `client_decrypt_decode`          | Decryption and plaintext decoding of the result at the client.
 | `client_postprocess`             | Any in the clear computation that the client wants to apply on the decrypted result.
 
