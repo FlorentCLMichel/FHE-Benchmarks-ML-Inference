@@ -22,10 +22,11 @@ def main():
     if quality_check:
         PIXELS_PATH = params.dataset_intermediate_dir() / f"test_pixels.txt"
         LABELS_PATH = params.dataset_intermediate_dir() / f"test_labels.txt"
+        # Andreea: changed SMALL to 10 for debugging purposes
         if size == utils.SINGLE:
-            num_samples = 10
+            num_samples = 1
         elif size == utils.SMALL:
-            num_samples = 100
+            num_samples = 10
         elif size == utils.MEDIUM:
             num_samples = 1000
         elif size == utils.LARGE:

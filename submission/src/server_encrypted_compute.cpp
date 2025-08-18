@@ -25,7 +25,8 @@ int main(int argc, char* argv[]){
     std::cout << "         [server] Loading keys" << std::endl;
 
     Ciphertext<DCRTPoly> ctxt;
-    if (!Serial::DeserializeFromFile(prms.ctxtupdir()/"cipher_input.bin", ctxt, SerType::BINARY)) {
+    // Andreea: Take in the iteration number and read the corresponding ciphertext
+    if (!Serial::DeserializeFromFile(prms.ctxtupdir()/"cipher_input_0.bin", ctxt, SerType::BINARY)) {
         throw std::runtime_error("Failed to get ciphertexts from " + prms.ctxtupdir().string());
     }
 

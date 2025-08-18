@@ -102,8 +102,9 @@ def main():
         utils.log_step(9, "Client: Result postprocessing")
 
         # 10 Verify the result
-        expected_file = params.dataset_intermediate_dir() / "plain_output.bin"
-        result_file = io_dir / "result.txt"
+        expected_file = params.dataset_intermediate_dir() / "plain_output.bin"\
+        # Andreea: In the case of multiple samples, the result file should have the correct number appended (iteration in the for loop)
+        result_file = io_dir / "result_0.txt"
 
         if not result_file.exists():
             print(f"Error: Result file {result_file} not found")

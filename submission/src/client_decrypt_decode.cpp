@@ -31,11 +31,15 @@ int main(int argc, char* argv[]) {
       throw std::runtime_error("Failed to get ciphertext from " + prms.ctxtdowndir().string());
     }
 
-    std::vector<float> output = mlp_decrypt(cc, ctxt, sk);
+    std::vector<float> output;
+    for (size_t i = 0; i < prms.getBatchSize(); ++i) {
+        output = mlp_decrypt(cc, ctxt, sk);
 
-    auto max_id = argmax(output.data(), 1024);
-    std::ofstream out(prms.iodir() / "result.txt");
-    out << max_id << '\n';
+        auto max_id = argmax(output.data(), 1024);
+        auto result_path = prms.iodir()/("result_" + std::to_string(i) + ".txt");
+        std::ofstream out(result_path);
+        out << max_id << '\n';
+    }
 
     return 0;
 }
