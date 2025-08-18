@@ -45,7 +45,8 @@ def main():
     utils.log_step(0, "Init", True)
 
     # 1. Client-side: Generate the test datasets
-    cmd = ["python3", harness_dir/"generate_dataset.py", str(size)]
+    dataset_path = params.datadir() / f"dataset.txt"
+    cmd = ["python3", harness_dir/"generate_dataset.py", str(dataset_path)]
     subprocess.run(cmd, check=True)
     utils.log_step(1, "Harness: MNIST Test dataset generation")
 
