@@ -8,21 +8,6 @@ import utils
 from utils import parse_submission_arguments
 from mnist import mnist
 
-def count_lines_in_file(file_path):
-    """
-    Count the number of lines in a file.
-    
-    Args:
-        file_path (Path): Path to the file
-        
-    Returns:
-        int: Number of lines in the file, or 0 if file doesn't exist
-    """
-    if file_path.exists():
-        with open(file_path, 'r') as f:
-            return sum(1 for line in f)
-    else:
-        return 0
 
 def main():
     """

@@ -22,6 +22,7 @@ LEARNING_RATE = 0.001
 EPOCHS = 15 # Increased epochs for potentially better accuracy
 MODEL_PATH = './harness/mnist/mnist_ffnn_model.pth'
 RNG_SEED = 42 # for reproducibility
+DATA_DIR='./harness/mnist/data'
 
 # Define command line flags
 flags.DEFINE_string('model_path', MODEL_PATH, 'Path to save/load the model')
@@ -35,6 +36,10 @@ flags.DEFINE_integer('seed', RNG_SEED, 'Random seed for reproducibility')
 flags.DEFINE_boolean('export_test_data', False, 'Export test dataset to file and exit')
 flags.DEFINE_string('test_data_output', 'mnist_test.txt', 'Output file for exported test data')
 flags.DEFINE_integer('num_samples', -1, 'Number of samples to export (-1 for all samples)')
+
+flags.DEFINE_boolean('predict', False, 'Run prediction on pixels file and exit')
+flags.DEFINE_string('pixels_file', '', 'Path to file containing pixel data for prediction')
+flags.DEFINE_string('predictions_file', 'predictions.txt', 'Output file for predictions')
 
 # Ensure reproducibility
 torch.manual_seed(RNG_SEED)
@@ -54,7 +59,7 @@ def get_mnist_transform():
         transforms.Normalize((0.1307,), (0.3081,)) # Normalize with MNIST dataset's mean and std
     ])
 
-def load_and_preprocess_data(batch_size=BATCH_SIZE, data_dir='./harness/mnist/data'):
+def load_and_preprocess_data(batch_size=BATCH_SIZE, data_dir=DATA_DIR):
     """
     Load and preprocess MNIST dataset.
     
@@ -86,12 +91,25 @@ def load_and_preprocess_data(batch_size=BATCH_SIZE, data_dir='./harness/mnist/da
 # 3. Model Definition: See model.py
 
 # 4. Training Function: See train.py
+def train_model(model_path, batch_size, learning_rate, epochs, train_loader, val_loader, data_dir, device):
+
+    model = simple_ffn.SimpleFFNN().to(device)
+    criterion = nn.CrossEntropyLoss() # Suitable for classification tasks
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate) # Adam optimizer
+
+    # Train the model if it does not exist
+    if os.path.exists(model_path):
+        model.load_state_dict(torch.load(model_path, map_location=device))
+    else:
+        train.train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, model_path)
+    return model
+    
 
 # 5. Testing Function: See test.py
 
 
 # Function to export test data to separate files.
-def export_test_pixels_labels(data_dir='./data', pixels_file="mnist_pixels.txt", labels_file="mnist_labels.txt", num_samples=-1, seed=None):
+def export_test_pixels_labels(data_dir=DATA_DIR, pixels_file="mnist_pixels.txt", labels_file="mnist_labels.txt", num_samples=-1, seed=None):
     """
     Export MNIST test dataset to separate label and pixel files using random sampling.
     
@@ -154,7 +172,7 @@ def export_test_pixels_labels(data_dir='./data', pixels_file="mnist_pixels.txt",
                     pixel_f.write(f"{pixel_values}\n")
 
 
-def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_samples=-1, seed=None):
+def export_test_data(data_dir=DATA_DIR, output_file='mnist_test.txt', num_samples=-1, seed=None):
     """
     Export MNIST test dataset to separate label and pixel files using random sampling.
     
@@ -170,6 +188,19 @@ def export_test_data(data_dir='./data', output_file='mnist_test.txt', num_sample
     export_test_pixels_labels(data_dir=data_dir, pixels_file=pixels_file, labels_file=labels_file, num_samples=num_samples, seed=seed)
 
 
+def run_predict(model_path, pixels_file, predictions_file, device="cpu"):
+    """
+    Run prediction on the given pixel file using the specified model.
+    """
+    if not os.path.exists(model_path):
+        train_loader, val_loader, test_loader = load_and_preprocess_data(batch_size=BATCH_SIZE, data_dir=DATA_DIR)
+        _ = train_model(model_path, batch_size=BATCH_SIZE, learning_rate=LEARNING_RATE,
+                    epochs=EPOCHS, train_loader=train_loader, val_loader=val_loader,
+                    data_dir=DATA_DIR, device=device)
+    test.predict(pixels_file, model_path, predictions_file, device=device)
+
+
+
 def main(argv):
     # Check if we should just export test data and exit
     if FLAGS.export_test_data:
@@ -178,12 +209,6 @@ def main(argv):
         print("Export completed. Exiting.")
         return
     
-    # Use command line flags
-    model_path = FLAGS.model_path
-    batch_size = FLAGS.batch_size
-    learning_rate = FLAGS.learning_rate
-    epochs = FLAGS.epochs
-    data_dir = FLAGS.data_dir
     use_cuda = not FLAGS.no_cuda and torch.cuda.is_available()
     random_seed = FLAGS.seed
     # Set random seed for reproducibility
@@ -191,37 +216,25 @@ def main(argv):
 
     if use_cuda:
         torch.cuda.manual_seed_all(random_seed)
-    
-    # Load and preprocess data
-    print("Loading and preprocessing data...")
-    train_loader, val_loader, test_loader = load_and_preprocess_data(batch_size=batch_size, data_dir=data_dir)
-    print("Data loading completed.")
-    
-    # Determine device (CPU or GPU)
-    device = torch.device("cuda" if use_cuda else "cpu")
-    print(f"Using device: {device}")
-    print(f"Model path: {model_path}")
-    print(f"Batch size: {batch_size}")
-    print(f"Learning rate: {learning_rate}")
-    print(f"Epochs: {epochs}")
-    print(f"Random seed: {random_seed}")
+    device = "cuda" if use_cuda else "cpu"
+    # Train the model.
+    train_loader, val_loader, test_loader = load_and_preprocess_data(batch_size=FLAGS.batch_size, data_dir=FLAGS.data_dir)
+    model = train_model(FLAGS.model_path, FLAGS.batch_size, FLAGS.learning_rate, 
+            FLAGS.epochs, train_loader, val_loader, data_dir, device=device)
 
-    model = simple_ffn.SimpleFFNN().to(device)
-    criterion = nn.CrossEntropyLoss() # Suitable for classification tasks
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate) # Adam optimizer
-
-    # Train the model if it does not exist
-    if os.path.exists(model_path):
-        print(f"\nModel '{model_path}' already exists. Skipping training and loading saved model.")
-        model.load_state_dict(torch.load(model_path, map_location=device))
+    # Check if we should run prediction and exit
+    if FLAGS.predict:
+        if not FLAGS.pixels_file:
+            print("Error: pixels_file must be specified when using --predict flag")
+            return
+        print("Prediction mode: Running inference on provided pixel data...")
+        run_predict(FLAGS.model_path, FLAGS.pixels_file, FLAGS.predictions_file)
+        print("Prediction completed. Exiting.")
+        return
     else:
-        print(f"\nModel '{model_path}' not found. Starting training...")
-        train.train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, model_path)
-        print("Training finished.")
-
-    # Testing the model
-    print(f"\nEvaluating model on test data...")
-    test_accuracy = test.test_model(model, test_loader, device)
+        # Testing the model
+        print(f"\nEvaluating model on test data...")
+        test_accuracy = test.test_model(model, test_loader, device)
 
 
 if __name__ == '__main__':

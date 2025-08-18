@@ -45,7 +45,8 @@ def main():
     utils.log_step(0, "Init", True)
 
     # 1. Client-side: Generate the test datasets
-    cmd = ["python3", harness_dir/"generate_dataset.py", str(size)]
+    dataset_path = params.datadir() / f"dataset.txt"
+    cmd = ["python3", harness_dir/"generate_dataset.py", str(dataset_path)]
     subprocess.run(cmd, check=True)
     utils.log_step(1, "Harness: MNIST Test dataset generation")
 
@@ -100,15 +101,8 @@ def main():
         subprocess.run([exec_dir/"client_postprocess", str(size)], check=True)
         utils.log_step(9, "Client: Result postprocessing")
 
-        # 10.1 Run the cleartext computation in cleartext_impl.py
-        # If the cleartext computation takes too long, compute it once for a given state and skip this step.
-        # One can store the results for multiple runs; currently, storing expected.txt works only with num_runs = 1.
-        if clrtxt is None:
-            subprocess.run(["python3", harness_dir/"cleartext_impl.py", str(size)], check=True)
-            print("         [harness] Wrote expected result to: ", params.dataset_intermediate_dir() / "expected.txt")
-
-        # 10.2 Verify the result
-        expected_file = params.dataset_intermediate_dir() / "expected.txt"
+        # 10 Verify the result
+        expected_file = params.dataset_intermediate_dir() / "plain_output.bin"
         result_file = io_dir / "result.txt"
 
         if not result_file.exists():
@@ -139,12 +133,18 @@ def main():
         subprocess.run(cmd, check=True)
         utils.log_step(12.1, "Harness: Input generation for Encrypted Model Quality")
 
-        # 12.2. Run the quality check for encrypted inference.
+        # 12.2 Run the cleartext computation in cleartext_impl.py
+        test_pixels = params.dataset_intermediate_dir() / f"test_pixels.txt"
+        reference_model_predictions = params.dataset_intermediate_dir() / f"reference_model_predictions.txt"
+        subprocess.run(["python3", harness_dir/"cleartext_impl.py", str(test_pixels), str(reference_model_predictions)], check=True)
+        print("         [harness] Wrote reference model predictions to: ", reference_model_predictions)
+
+        # 12.3. Run the quality check for encrypted inference.
         cmd = [exec_dir/"server_encrypted_model_quality", str(size)]
         subprocess.run(cmd, check=True)
-        utils.log_step(12.2, "Server: Encrypted inference model quality check")
+        utils.log_step(12.3, "Server: Encrypted inference model quality check")
 
-        # 12.3. Calculate and save accuracy.
+        # 12.4. Calculate and save accuracy.
         subprocess.run(["python3", harness_dir/"calculate_quality.py",
             str(size)], check=True)
 
