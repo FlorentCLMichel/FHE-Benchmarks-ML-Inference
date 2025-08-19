@@ -61,6 +61,7 @@ def main():
 
     # Run steps 4-10 multiple times if requested
     for run in range(num_runs):
+        run_path = params.measuredir() / f"results-{run+1}.json"
         if num_runs > 1:
             print(f"\n         [harness] Run {run+1} of {num_runs}")
 
@@ -98,8 +99,8 @@ def main():
         utils.log_step(9, "Client: Result postprocessing")
 
         # 10 Verify the result for single inference or calculate quality for batch inference.
-        encrypted_model_preds = io_dir / "encrypted_model_predictions.txt"
-        ground_truth_labels = params.dataset_intermediate_dir() / "test_labels.txt"
+        encrypted_model_preds = params.get_encrypted_model_predictions_file()
+        ground_truth_labels = params.get_ground_truth_labels_file()
         if not encrypted_model_preds.exists():
             print(f"Error: Result file {encrypted_model_preds} not found")
             sys.exit(1)
@@ -112,18 +113,16 @@ def main():
             test_pixels = params.get_test_input_file()
             harness_model_preds = params.get_harness_model_predictions_file()
             subprocess.run(["python3", harness_dir/"cleartext_impl.py", str(test_pixels), str(harness_model_preds)], check=True)
-            utils.log_step(10.1, "Harness: Run inference for harness plaintext model.")
-            print("         [harness] Wrote harness model predictions to: ", harness_model_preds)
+            utils.log_step(10.1, "Harness: Run inference for harness plaintext model")
 
             # 10.2 Run the quality calculation
-            subprocess.run(["python3", harness_dir/"calculate_quality.py",
-                str(size)], check=True)
-            utils.log_step(10.2, "Harness: Run encrypted inference")
+            utils.calculate_quality(ground_truth_labels, encrypted_model_preds, "Encrypted model")
+            utils.calculate_quality(ground_truth_labels, harness_model_preds, "Harness model")
+            utils.log_step(10.2, "Harness: Run quality check")
 
         # 11. Store measurements
-        run_path = params.measuredir() / f"results-{run+1}.json"
         run_path.parent.mkdir(parents=True, exist_ok=True)
-        utils.save_run(run_path)
+        utils.save_run(run_path, size)
 
     print(f"\nAll steps completed for the {instance_name(size)} inference!")
 

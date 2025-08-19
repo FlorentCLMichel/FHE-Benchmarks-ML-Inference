@@ -118,18 +118,59 @@ def human_readable_size(n: int):
         n /= 1024
     return f"{n:.1f}P"
 
-def save_run(path: Path):
+def save_run(path: Path, size: int = 0):
     global _timestamps
     global _timestampsStr
     global _bandwidth
+    global _model_quality
 
-    json.dump({
-        "total_latency_ms": round(sum(_timestamps.values()), 4),
-        "per_stage": _timestampsStr,
-        "bandwidth": _bandwidth,
-    }, open(path,"w"), indent=2)
+    if size == 0:
+        json.dump({
+            "total_latency_ms": round(sum(_timestamps.values()), 4),
+            "per_stage": _timestampsStr,
+            "bandwidth": _bandwidth,
+        }, open(path,"w"), indent=2)
+    else:
+        json.dump({
+            "total_latency_ms": round(sum(_timestamps.values()), 4),
+            "per_stage": _timestampsStr,
+            "bandwidth": _bandwidth,
+            "mnist_model_quality" : _model_quality,
+        }, open(path,"w"), indent=2)
 
     print("[total latency]", f"{round(sum(_timestamps.values()), 4)}s")
+
+def calculate_quality(label_file: Path, pred_file: Path, tag: str):
+    """
+    Calculates accuracy by comparing labels line by line.
+    Label file and predictions file should contain one label per line.
+    Logs accuracy metric and prints results.
+    """
+    __, params, __, __, __ = parse_submission_arguments('Generate query for FHE benchmark.')
+
+    label_file = params.get_ground_truth_labels_file()
+    pred_file = params.get_encrypted_model_predictions_file()
+
+    try:
+        # Read expected labels (one per line)
+        labels = label_file.read_text().strip().split('\n')
+        labels = [label.strip() for label in labels if label.strip()]
+
+        # Read result labels (one per line)
+        preds = pred_file.read_text().strip().split('\n')
+        preds = [label.strip() for label in preds if label.strip()]
+
+    except Exception as e:
+        print(f"[harness] failed to read files: {e}")
+        sys.exit(1)
+
+    num_samples = len(preds)
+
+    correct_pred = sum(1 for exp, res in zip(labels, preds) if exp == res)
+    accuracy = correct_pred / num_samples
+    print(f"[harness] {tag}: {accuracy:.4f} ({correct_pred}/{num_samples} correct)")
+    log_quality(correct_pred, num_samples, f"{tag} quality")
+
 
 def log_quality(correct_predictions, total_samples, tag):
     global _model_quality
@@ -138,7 +179,3 @@ def log_quality(correct_predictions, total_samples, tag):
         "total_samples": total_samples,
         "accuracy": correct_predictions / total_samples if total_samples > 0 else 0
     }
-
-def save_quality(path: Path):
-    global _model_quality
-    json.dump({"mnist_model_quality" : _model_quality}, open(path,"w"), indent=2)
