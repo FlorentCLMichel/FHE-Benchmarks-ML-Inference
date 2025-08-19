@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     }
     Ciphertext<DCRTPoly> ctxt;     
     std::vector<float> output;
-    auto result_path = prms.submission_enc_pred_file();
+    auto result_path = prms.encrypted_model_predictions_file();
     std::ofstream out(result_path);
     for (size_t i = 0; i < prms.getBatchSize(); ++i) {
         auto ctxt_path = prms.ctxtdowndir()/("cipher_result_" + std::to_string(i) + ".bin");

@@ -14,8 +14,8 @@ def main():
     Generate random value representing the query in the workload.
     """
     size, params, seed, __, __ = parse_submission_arguments('Generate input for FHE benchmark.')
-    PIXELS_PATH = params.dataset_intermediate_dir() / f"test_pixels.txt"
-    LABELS_PATH = params.dataset_intermediate_dir() / f"test_labels.txt"
+    PIXELS_PATH = params.get_test_input_file()
+    LABELS_PATH = params.get_ground_truth_labels_file()
     PIXELS_PATH.parent.mkdir(parents=True, exist_ok=True)
     num_samples = params.get_batch_size()
     mnist.export_test_pixels_labels(

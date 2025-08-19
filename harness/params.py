@@ -65,3 +65,19 @@ class InstanceParams:
     def get_batch_size(self):
         """Return the number of items in the batch."""
         return self.batch_size
+
+    def get_test_input_file(self):
+        """Return the test input file path."""
+        return self.dataset_intermediate_dir() / "test_pixels.txt"
+
+    def get_ground_truth_labels_file(self):
+        """Return the ground truth labels file path."""
+        return self.dataset_intermediate_dir() / "test_labels.txt"
+
+    def get_encrypted_model_predictions_file(self):
+        """Return the encrypted model predictions file path."""
+        return self.iodir() / "encrypted_model_predictions.txt"
+
+    def get_harness_model_predictions_file(self):
+        """Return the harness model predictions file path."""
+        return self.iodir() / "harness_model_predictions.txt"

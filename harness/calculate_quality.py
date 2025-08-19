@@ -17,9 +17,9 @@ def main():
     """
     __, params, __, __, __ = parse_submission_arguments('Generate query for FHE benchmark.')
 
-    test_set_label_file = params.dataset_intermediate_dir() / "test_labels.txt"
-    harness_model_pred = params.dataset_intermediate_dir() / "reference_model_predictions.txt"
-    encrypted_model_pred   = params.iodir() / "encrypted_model_predictions.txt"
+    test_set_label_file = params.get_ground_truth_labels_file()
+    harness_model_pred = params.get_harness_model_predictions_file()
+    encrypted_model_pred = params.get_encrypted_model_predictions_file()
 
     try:
         # Read expected labels (one per line)

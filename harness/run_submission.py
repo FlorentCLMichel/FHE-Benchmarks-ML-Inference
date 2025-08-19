@@ -19,7 +19,7 @@ def main():
     
     # 0. Prepare running
     # Get the arguments
-    size, params, seed, num_runs, clrtxt, quality_check = utils.parse_submission_arguments('Run ML Inference FHE benchmark.')
+    size, params, seed, num_runs, clrtxt = utils.parse_submission_arguments('Run ML Inference FHE benchmark.')
     test = instance_name(size)
     print(f"\n[harness] Running submission for {test} inference")
 
@@ -110,12 +110,12 @@ def main():
                 str(ground_truth_labels), str(encrypted_model_preds)], check=False)
         else:
             # 10.1 Run the cleartext computation in cleartext_impl.py
-            test_pixels = params.dataset_intermediate_dir() / f"test_pixels.txt"
-            reference_model_predictions = params.dataset_intermediate_dir() / f"reference_model_predictions.txt"
-            subprocess.run(["python3", harness_dir/"cleartext_impl.py", str(test_pixels), str(reference_model_predictions)], check=True)
+            test_pixels = params.get_test_input_file()
+            harness_model_preds = params.get_harness_model_predictions_file()
+            subprocess.run(["python3", harness_dir/"cleartext_impl.py", str(test_pixels), str(harness_model_preds)], check=True)
             utils.log_step(10.1, "Harness: Run inference for harness plaintext model.")
-            print("         [harness] Wrote reference model predictions to: ", reference_model_predictions)
-            
+            print("         [harness] Wrote harness model predictions to: ", harness_model_preds)
+
             # 10.2 Run the quality calculation
             subprocess.run(["python3", harness_dir/"calculate_quality.py",
                 str(size)], check=True)

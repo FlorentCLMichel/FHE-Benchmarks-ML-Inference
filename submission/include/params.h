@@ -62,7 +62,7 @@ public:
     }
     fs::path dataintermdir() const { return datadir() / "intermediate"; }
     fs::path test_input_file() const { return dataintermdir()/"test_pixels.txt"; }
-    fs::path submission_enc_pred_file() const { return iodir()/"encrypted_model_predictions.txt"; }
+    fs::path encrypted_model_predictions_file() const { return iodir()/"encrypted_model_predictions.txt"; }
 };
 
 #endif  // ifndef PARAMS_H_
