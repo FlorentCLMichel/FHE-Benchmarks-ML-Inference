@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
 
     Ciphertext<DCRTPoly> ctxt;
     fs::create_directories(prms.ctxtdowndir());
-    std::cout << "         [server] run encrypted MNIST inference" << std::endl;
+    std::cout << "         [server] Run encrypted MNIST inference" << std::endl;
     for (size_t i = 0; i < prms.getBatchSize(); ++i) {
         auto input_ctxt_path = prms.ctxtupdir()/("cipher_input_" + std::to_string(i) + ".bin");
         if (!Serial::DeserializeFromFile(input_ctxt_path, ctxt, SerType::BINARY)) {
