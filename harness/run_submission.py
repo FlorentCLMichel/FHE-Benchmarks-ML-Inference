@@ -20,9 +20,6 @@ def main():
     # 0. Prepare running
     # Get the arguments
     size, params, seed, num_runs, clrtxt, quality_check = utils.parse_submission_arguments('Run ML Inference FHE benchmark.')
-    if size > utils.SINGLE and not quality_check:
-        print(f"Currently only single inference is supported for measuring latency.")
-        sys.exit(1)
     test = instance_name(size)
     print(f"\n[harness] Running submission for {test} inference")
 
@@ -76,7 +73,7 @@ def main():
             genqry_seed = rng.integers(0,0x7fffffff)
             cmd.extend(["--seed", str(genqry_seed)])
         subprocess.run(cmd, check=True)
-        utils.log_step(4, "Harness: Input generation for Single Encrypted Inference")
+        utils.log_step(4, "Harness: Input generation for MNIST")
 
         # 5. Client-side: Preprocess input using exec_dir/client_preprocess_input
         subprocess.run([exec_dir/"client_preprocess_input", str(size)], check=True)
@@ -101,53 +98,33 @@ def main():
         subprocess.run([exec_dir/"client_postprocess", str(size)], check=True)
         utils.log_step(9, "Client: Result postprocessing")
 
-        # 10 Verify the result
-        expected_file = params.dataset_intermediate_dir() / "plain_output.bin"\
-        # Andreea: In the case of multiple samples, the result file should have the correct number appended (iteration in the for loop)
-        result_file = io_dir / "result_0.txt"
-
-        if not result_file.exists():
-            print(f"Error: Result file {result_file} not found")
+        # 10 Verify the result for single inference or calculate quality for batch inference.
+        encrypted_model_preds = io_dir / "encrypted_model_predictions.txt"
+        ground_truth_labels = params.dataset_intermediate_dir() / "test_labels.txt"
+        if not encrypted_model_preds.exists():
+            print(f"Error: Result file {encrypted_model_preds} not found")
             sys.exit(1)
 
-        subprocess.run(["python3", harness_dir/"verify_result.py",
-            str(expected_file), str(result_file)], check=False)
+        if (size == utils.SINGLE):
+            subprocess.run(["python3", harness_dir/"verify_result.py",
+                str(ground_truth_labels), str(encrypted_model_preds)], check=False)
+        else:
+            # 10.1 Run the cleartext computation in cleartext_impl.py
+            test_pixels = params.dataset_intermediate_dir() / f"test_pixels.txt"
+            reference_model_predictions = params.dataset_intermediate_dir() / f"reference_model_predictions.txt"
+            subprocess.run(["python3", harness_dir/"cleartext_impl.py", str(test_pixels), str(reference_model_predictions)], check=True)
+            utils.log_step(10.1, "Harness: Run inference for harness plaintext model.")
+            print("         [harness] Wrote reference model predictions to: ", reference_model_predictions)
+            
+            # 10.2 Run the quality calculation
+            subprocess.run(["python3", harness_dir/"calculate_quality.py",
+                str(size)], check=True)
+            utils.log_step(10.2, "Harness: Run encrypted inference.")
 
         # 11. Store measurements
         run_path = params.measuredir() / f"results-{run+1}.json"
         run_path.parent.mkdir(parents=True, exist_ok=True)
         utils.save_run(run_path)
-
-    
-    if quality_check:
-        print("------------------------------------------------------------------")
-        print("         [harness] Running quality check for encrypted inference.")
-        # 12.1. Client-side: Generate a new random input using harness/generate_input.py
-        cmd = ["python3", harness_dir/"generate_input.py", str(size)]
-        if seed is not None:
-            # Use a different seed for each run but derived from the base seed
-            rng = np.random.default_rng(seed)
-            genqry_seed = rng.integers(0,0x7fffffff)
-            cmd.extend(["--seed", str(genqry_seed)])
-        if quality_check:
-            cmd.extend(["--run_quality_check", "True"])
-        subprocess.run(cmd, check=True)
-        utils.log_step(12.1, "Harness: Input generation for Encrypted Model Quality")
-
-        # 12.2 Run the cleartext computation in cleartext_impl.py
-        test_pixels = params.dataset_intermediate_dir() / f"test_pixels.txt"
-        reference_model_predictions = params.dataset_intermediate_dir() / f"reference_model_predictions.txt"
-        subprocess.run(["python3", harness_dir/"cleartext_impl.py", str(test_pixels), str(reference_model_predictions)], check=True)
-        print("         [harness] Wrote reference model predictions to: ", reference_model_predictions)
-
-        # 12.3. Run the quality check for encrypted inference.
-        cmd = [exec_dir/"server_encrypted_model_quality", str(size)]
-        subprocess.run(cmd, check=True)
-        utils.log_step(12.3, "Server: Encrypted inference model quality check")
-
-        # 12.4. Calculate and save accuracy.
-        subprocess.run(["python3", harness_dir/"calculate_quality.py",
-            str(size)], check=True)
 
     print(f"\nAll steps completed for the {instance_name(size)} inference!")
 

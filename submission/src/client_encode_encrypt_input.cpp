@@ -21,10 +21,9 @@ int main(int argc, char* argv[]){
     PublicKey<DCRTPoly> pk = read_public_key(prms);
 
     std::vector<Sample> dataset;
-    std::string q_path = prms.dataintermdir()/"plain_input.bin";
-    load_dataset(dataset, q_path.c_str());
+    load_dataset(dataset, prms.test_input_file().c_str());
     if (dataset.empty()) {
-        throw std::runtime_error("No data found in " + q_path);
+        throw std::runtime_error("No data found in " + prms.test_input_file().string());
     }
     // Step 2: Encrypt inputs
     if (dataset.size() != prms.getBatchSize()) {

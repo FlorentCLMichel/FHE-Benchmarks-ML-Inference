@@ -25,21 +25,22 @@ int main(int argc, char* argv[]){
     std::cout << "         [server] Loading keys" << std::endl;
 
     Ciphertext<DCRTPoly> ctxt;
-    // Andreea: Take in the iteration number and read the corresponding ciphertext
-    if (!Serial::DeserializeFromFile(prms.ctxtupdir()/"cipher_input_0.bin", ctxt, SerType::BINARY)) {
-        throw std::runtime_error("Failed to get ciphertexts from " + prms.ctxtupdir().string());
-    }
-
-    std::cout << "         [server] run encrypted MNIST inference" << std::endl;
-    auto start = std::chrono::high_resolution_clock::now();
-    auto ctxtResult = mlp(cc, ctxt);
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-    std::cout << "         [server] Execution time: " << duration.count() << " seconds" << std::endl;
-
-    
     fs::create_directories(prms.ctxtdowndir());
-    Serial::SerializeToFile(prms.ctxtdowndir()/"cipher_result.bin", ctxtResult, SerType::BINARY);
+    std::cout << "         [server] run encrypted MNIST inference" << std::endl;
+    for (size_t i = 0; i < prms.getBatchSize(); ++i) {
+        auto input_ctxt_path = prms.ctxtupdir()/("cipher_input_" + std::to_string(i) + ".bin");
+        if (!Serial::DeserializeFromFile(input_ctxt_path, ctxt, SerType::BINARY)) {
+            throw std::runtime_error("Failed to get ciphertexts from " + input_ctxt_path.string());
+        }
+        auto start = std::chrono::high_resolution_clock::now();
+        auto ctxtResult = mlp(cc, ctxt);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+        std::cout << "         [server] Execution time for ciphertext " << i << " : " 
+                << duration.count() << " seconds" << std::endl;
+        auto result_ctxt_path = prms.ctxtdowndir()/("cipher_result_" + std::to_string(i) + ".bin");
+        Serial::SerializeToFile(result_ctxt_path, ctxtResult, SerType::BINARY);
+    }
 
     return 0;
 }

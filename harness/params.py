@@ -29,8 +29,7 @@ class InstanceParams:
         if size > LARGE:
             raise ValueError("Invalid instance size")
         
-        # Andreea: changed SMALL to 10 for debugging purposes
-        batch_size =              [1, 10, 1000, 10000]
+        batch_size =              [1, 15, 1000, 10000]
 
         self.batch_size = batch_size[size]
 

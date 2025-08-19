@@ -40,8 +40,7 @@ public:
             throw std::invalid_argument("Invalid instance size");
         }
 
-        // Andreea: changed SMALL to 10 for debugging purposes
-        const int batchSizes[] = {1, 10, 1000, 10000};
+        const int batchSizes[] = {1, 15, 1000, 10000};
         batchSize    = batchSizes[int(_size)];
     }
 
@@ -62,6 +61,8 @@ public:
         return rootdir/"datasets"/instance_name(size);
     }
     fs::path dataintermdir() const { return datadir() / "intermediate"; }
+    fs::path test_input_file() const { return dataintermdir()/"test_pixels.txt"; }
+    fs::path submission_enc_pred_file() const { return iodir()/"encrypted_model_predictions.txt"; }
 };
 
 #endif  // ifndef PARAMS_H_
