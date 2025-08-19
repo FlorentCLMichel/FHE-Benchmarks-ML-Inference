@@ -61,6 +61,7 @@ def main():
 
     # Run steps 4-10 multiple times if requested
     for run in range(num_runs):
+        run_path = params.measuredir() / f"results-{run+1}.json"
         if num_runs > 1:
             print(f"\n         [harness] Run {run+1} of {num_runs}")
 
@@ -112,18 +113,16 @@ def main():
             test_pixels = params.get_test_input_file()
             harness_model_preds = params.get_harness_model_predictions_file()
             subprocess.run(["python3", harness_dir/"cleartext_impl.py", str(test_pixels), str(harness_model_preds)], check=True)
-            utils.log_step(10.1, "Harness: Run inference for harness plaintext model.")
+            utils.log_step(10.1, "Harness: Run inference for harness plaintext model")
             print("         [harness] Wrote harness model predictions to: ", harness_model_preds)
 
             # 10.2 Run the quality calculation
-            subprocess.run(["python3", harness_dir/"calculate_quality.py",
-                str(size)], check=True)
-            utils.log_step(10.2, "Harness: Run encrypted inference")
+            utils.calculate_quality()
+            utils.log_step(10.2, "Harness: Run quality check on encrypted inference")
 
         # 11. Store measurements
-        run_path = params.measuredir() / f"results-{run+1}.json"
         run_path.parent.mkdir(parents=True, exist_ok=True)
-        utils.save_run(run_path)
+        utils.save_run(run_path, size)
 
     print(f"\nAll steps completed for the {instance_name(size)} inference!")
 
