@@ -13,24 +13,11 @@ def main():
     """
     Generate random value representing the query in the workload.
     """
-    size, params, seed, __, __, quality_check = parse_submission_arguments('Generate input for FHE benchmark.')
-    PIXELS_PATH = params.dataset_intermediate_dir() / f"plain_input.bin"
-    LABELS_PATH = params.dataset_intermediate_dir() / f"plain_output.bin"
+    size, params, seed, __, __ = parse_submission_arguments('Generate input for FHE benchmark.')
+    PIXELS_PATH = params.get_test_input_file()
+    LABELS_PATH = params.get_ground_truth_labels_file()
     PIXELS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    num_samples = 1
-
-    if quality_check:
-        PIXELS_PATH = params.dataset_intermediate_dir() / f"test_pixels.txt"
-        LABELS_PATH = params.dataset_intermediate_dir() / f"test_labels.txt"
-        if size == utils.SINGLE:
-            num_samples = 10
-        elif size == utils.SMALL:
-            num_samples = 100
-        elif size == utils.MEDIUM:
-            num_samples = 1000
-        elif size == utils.LARGE:
-            num_samples = 10000
-    
+    num_samples = params.get_batch_size()
     mnist.export_test_pixels_labels(
             data_dir = params.datadir(), 
             pixels_file=PIXELS_PATH, 

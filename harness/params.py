@@ -28,6 +28,10 @@ class InstanceParams:
 
         if size > LARGE:
             raise ValueError("Invalid instance size")
+        
+        batch_size =              [1, 15, 1000, 10000]
+
+        self.batch_size = batch_size[size]
 
     def get_size(self):
         """Return the instance size."""
@@ -46,7 +50,6 @@ class InstanceParams:
         """Return the intermediate  directory path."""
         return self.datadir() / "intermediate"
 
-
     def iodir(self):
         """Return the I/O directory path."""
         return self.rootdir / "io" / instance_name(self.size)
@@ -58,3 +61,23 @@ class InstanceParams:
     def measuredir(self):
         """Return the measurements directory path."""
         return self.rootdir / "measurements" / instance_name(self.size)
+    
+    def get_batch_size(self):
+        """Return the number of items in the batch."""
+        return self.batch_size
+
+    def get_test_input_file(self):
+        """Return the test input file path."""
+        return self.dataset_intermediate_dir() / "test_pixels.txt"
+
+    def get_ground_truth_labels_file(self):
+        """Return the ground truth labels file path."""
+        return self.dataset_intermediate_dir() / "test_labels.txt"
+
+    def get_encrypted_model_predictions_file(self):
+        """Return the encrypted model predictions file path."""
+        return self.iodir() / "encrypted_model_predictions.txt"
+
+    def get_harness_model_predictions_file(self):
+        """Return the harness model predictions file path."""
+        return self.iodir() / "harness_model_predictions.txt"

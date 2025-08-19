@@ -26,6 +26,7 @@ inline std::string instance_name(const InstanceSize size) {
 // Parameters that differ for different instance sizes
 class InstanceParams {
     const InstanceSize size;
+    size_t batchSize;
     // Add any parameters necessary
     fs::path rootdir; // root of the submission dir structure (see below)
 
@@ -38,11 +39,15 @@ public:
         if (unsigned(_size) > unsigned(InstanceSize::LARGE)) {
             throw std::invalid_argument("Invalid instance size");
         }
+
+        const int batchSizes[] = {1, 15, 1000, 10000};
+        batchSize    = batchSizes[int(_size)];
     }
 
     // Getters for all the parameters. There are no setters, once
     // an object is constructed these parameters cannot be modified.
     const InstanceSize getSize() const { return size; }
+    const size_t getBatchSize() const { return batchSize; }
 
     // The relevant directories where things are found
     fs::path rtdir() const  { return rootdir; }
@@ -56,6 +61,8 @@ public:
         return rootdir/"datasets"/instance_name(size);
     }
     fs::path dataintermdir() const { return datadir() / "intermediate"; }
+    fs::path test_input_file() const { return dataintermdir()/"test_pixels.txt"; }
+    fs::path encrypted_model_predictions_file() const { return iodir()/"encrypted_model_predictions.txt"; }
 };
 
 #endif  // ifndef PARAMS_H_

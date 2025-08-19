@@ -21,17 +21,24 @@ int main(int argc, char* argv[]){
     PublicKey<DCRTPoly> pk = read_public_key(prms);
 
     std::vector<Sample> dataset;
-    std::string q_path = prms.dataintermdir()/"plain_input.bin";
-    load_dataset(dataset, q_path.c_str());
+    load_dataset(dataset, prms.test_input_file().c_str());
     if (dataset.empty()) {
-        throw std::runtime_error("No data found in " + q_path);
+        throw std::runtime_error("No data found in " + prms.test_input_file().string());
     }
-    auto *input = dataset[0].image;
-    std::vector<float> input_vector(input, input + NORMALIZED_DIM);
+    // Step 2: Encrypt inputs
+    if (dataset.size() != prms.getBatchSize()) {
+        throw std::runtime_error("Dataset size does not match instance size");
+    }
 
-    auto ctxt = mlp_encrypt(cc, input_vector, pk);
+    std::shared_ptr<const CiphertextImpl<DCRTPoly>> ctxt;
     fs::create_directories(prms.ctxtupdir());
-    Serial::SerializeToFile(prms.ctxtupdir()/"cipher_input.bin", ctxt, SerType::BINARY);
+    for (size_t i = 0; i < dataset.size(); ++i) {
+        auto *input = dataset[i].image;
+        std::vector<float> input_vector(input, input + NORMALIZED_DIM);
+        ctxt = mlp_encrypt(cc, input_vector, pk);
+        auto ctxt_path = prms.ctxtupdir()/("cipher_input_" + std::to_string(i) + ".bin");
+        Serial::SerializeToFile(ctxt_path, ctxt, SerType::BINARY);
+    }
 
     return 0;
 }

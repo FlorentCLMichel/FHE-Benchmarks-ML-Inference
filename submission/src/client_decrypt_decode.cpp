@@ -27,15 +27,18 @@ int main(int argc, char* argv[]) {
         throw std::runtime_error("Failed to get secret key from  " + prms.seckeydir().string());
     }
     Ciphertext<DCRTPoly> ctxt;     
-    if (!Serial::DeserializeFromFile(prms.ctxtdowndir()/"cipher_result.bin", ctxt, SerType::BINARY)) {
-      throw std::runtime_error("Failed to get ciphertext from " + prms.ctxtdowndir().string());
+    std::vector<float> output;
+    auto result_path = prms.encrypted_model_predictions_file();
+    std::ofstream out(result_path);
+    for (size_t i = 0; i < prms.getBatchSize(); ++i) {
+        auto ctxt_path = prms.ctxtdowndir()/("cipher_result_" + std::to_string(i) + ".bin");
+        if (!Serial::DeserializeFromFile(ctxt_path, ctxt, SerType::BINARY)) {
+            throw std::runtime_error("Failed to get ciphertext from " + ctxt_path.string());
+        }
+        output = mlp_decrypt(cc, ctxt, sk);
+        auto max_id = argmax(output.data(), 1024);
+        out << max_id << '\n';
     }
-
-    std::vector<float> output = mlp_decrypt(cc, ctxt, sk);
-
-    auto max_id = argmax(output.data(), 1024);
-    std::ofstream out(prms.iodir() / "result.txt");
-    out << max_id << '\n';
 
     return 0;
 }

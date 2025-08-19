@@ -98,7 +98,3 @@ add_executable( server_preprocess_model src/server_preprocess_model.cpp )
 add_executable( server_encrypted_compute src/server_encrypted_compute.cpp )
 target_link_libraries( server_encrypted_compute mlp_openfhe )
 target_link_libraries( server_encrypted_compute mlp_encryption_utils )
-
-add_executable( server_encrypted_model_quality src/server_encrypted_model_quality.cpp )
-target_link_libraries( server_encrypted_model_quality mlp_openfhe )
-target_link_libraries( server_encrypted_model_quality mlp_encryption_utils )
