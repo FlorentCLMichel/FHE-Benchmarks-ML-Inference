@@ -6,7 +6,6 @@ run_submission.py - run the entire submission process, from build to verify
 # TODO: Add license and copyright
 
 import subprocess
-import pathlib
 import sys
 import numpy as np
 import utils
@@ -119,7 +118,7 @@ def main():
             # 10.2 Run the quality calculation
             subprocess.run(["python3", harness_dir/"calculate_quality.py",
                 str(size)], check=True)
-            utils.log_step(10.2, "Harness: Run encrypted inference.")
+            utils.log_step(10.2, "Harness: Run encrypted inference")
 
         # 11. Store measurements
         run_path = params.measuredir() / f"results-{run+1}.json"
